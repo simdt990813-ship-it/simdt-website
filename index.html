@@ -59,8 +59,9 @@
     text-decoration: none;
   }
   .logo img {
-    height: 32px;
+    height: 42px;
     width: auto;
+    filter: drop-shadow(0 2px 8px rgba(230,57,70,0.3));
   }
   .logo-text {
     font-size: 26px; font-weight: 900; letter-spacing: 3px;
@@ -154,8 +155,14 @@
 
   /* ---- PRODUCTS ---- */
   .products-grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    display: grid; grid-template-columns: repeat(3, 1fr);
     gap: 24px;
+  }
+  @media (max-width: 1024px) {
+    .products-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .products-grid { grid-template-columns: 1fr; }
   }
   .product-card {
     background: var(--bg-card); border: 1px solid var(--border);
@@ -167,7 +174,7 @@
     transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.4);
   }
   .product-img {
-    height: 240px; background: var(--surface);
+    height: 280px; background: var(--surface);
     display: flex; align-items: center; justify-content: center;
     position: relative; overflow: hidden;
   }
@@ -257,6 +264,14 @@
   footer .copyright {
     font-size: 13px; color: var(--text-muted);
   }
+  .contact-email {
+    margin-top: 12px;
+  }
+  .contact-email a {
+    font-size: 14px; color: var(--text-muted);
+    text-decoration: none; transition: color 0.2s;
+  }
+  .contact-email a:hover { color: var(--accent); }
 
   /* ---- RESPONSIVE ---- */
   @media (max-width: 1024px) {
@@ -361,7 +376,7 @@
         </ul>
       </div>
       <div class="about-visual fade-in">
-        <img src="images/product-dashboard.jpg" alt="SIMDT Dashboard on sim rig" loading="lazy">
+        <img src="images/scene-cockpit.jpg" alt="SIMDT GT2 steering wheel in sim racing cockpit" loading="lazy">
       </div>
     </div>
   </div>
@@ -398,8 +413,9 @@
 
 <!-- FOOTER -->
 <footer>
-  <a href="#" class="logo"><img src="images/logo.png" alt="SIMDT" style="height:28px;"></a>
+  <a href="#" class="logo"><img src="images/logo.png" alt="SIMDT" style="height:32px;"></a>
   <p class="copyright" data-i18n="footer">SIMDT Racing Simulation Hardware. All rights reserved.</p>
+  <p class="contact-email"><a href="mailto:simdt@qq.com" data-i18n="contact_email">simdt@qq.com</a></p>
 </footer>
 
 <script>
@@ -440,6 +456,7 @@ const i18n = {
     buy_visit: 'Visit Store →',
 
     footer: 'SIMDT Racing Simulation Hardware. www.simdt.cn',
+    contact_email: 'simdt@qq.com',
 
     // Product cards
     p1_name: 'Haptic Feedback Motor',
@@ -486,6 +503,42 @@ const i18n = {
     p5_spec2: 'Touchscreen',
     p5_spec3: 'SimHub Dash Studio',
     p5_spec4: 'Adjustable Mount',
+
+    p6_name: 'ST Haptic Vibration Motor',
+    p6_tag: 'New',
+    p6_subtitle: 'ST Series \u00b7 SimHub DSP',
+    p6_desc: 'Compact high-torque haptic vibration unit for pedals, seat, and wheel base. Recreates road bumps, engine rumble, ABS pulse, and gear shift feedback with stunning realism.',
+    p6_spec1: 'USB Plug & Play',
+    p6_spec2: 'SimHub DSP Effects',
+    p6_spec3: 'Multi-Point Mount',
+    p6_spec4: 'Alloy Construction',
+
+    p7_name: 'GT2 Racing Steering Wheel',
+    p7_tag: 'Premium',
+    p7_subtitle: '330mm \u00b7 Suede Grip',
+    p7_desc: 'Purpose-built GT racing wheel with premium suede leather grips, carbon fiber faceplate, magnetic paddle shifters, and full SimHub compatibility.',
+    p7_spec1: '330mm Diameter',
+    p7_spec2: 'Suede Leather Grip',
+    p7_spec3: 'Carbon Fiber Plate',
+    p7_spec4: 'Magnetic Shifters',
+
+    p8_name: 'G2 Gear Indicator Display',
+    p8_tag: 'New',
+    p8_subtitle: 'LED Gear Display',
+    p8_desc: 'Bright LED gear position indicator with customizable display modes. Mounts easily to any wheel base. Real-time gear readout compatible with all major sim titles.',
+    p8_spec1: 'LED Digital Display',
+    p8_spec2: 'Customizable Modes',
+    p8_spec3: 'Universal Mount',
+    p8_spec4: 'SimHub / Game HID',
+
+    p9_name: 'DT7 Pro Smart Dashboard',
+    p9_tag: 'Flagship',
+    p9_subtitle: '7\" HD Touch \u00b7 Data Hub',
+    p9_desc: 'Flagship 7-inch HD touchscreen dashboard with advanced telemetry, lap timing, fuel management, and fully customizable SimHub dash layouts. The ultimate race data center.',
+    p9_spec1: '7\" HD Touchscreen',
+    p9_spec2: 'Full Telemetry Suite',
+    p9_spec3: 'Custom Dash Studio',
+    p9_spec4: 'Adjustable Bracket',
   },
 
   zh: {
@@ -523,6 +576,7 @@ const i18n = {
     buy_visit: '前往店铺 →',
 
     footer: 'SIMDT 赛车模拟硬件 www.simdt.cn',
+    contact_email: 'simdt@qq.com',
 
     p1_name: '触觉反馈马达',
     p1_tag: '热销爆款',
@@ -568,6 +622,42 @@ const i18n = {
     p5_spec2: '触摸屏',
     p5_spec3: 'SimHub Dash Studio',
     p5_spec4: '可调支架',
+
+    p6_name: 'ST 体感震动马达',
+    p6_tag: '新款',
+    p6_subtitle: 'ST 系列 · SimHub DSP',
+    p6_desc: '紧凑型高扭矩体感震动单元，适用于踏板、座椅和方向盘底座。真实还原路面颠簸、引擎轰鸣、ABS 脉冲和换挡反馈。',
+    p6_spec1: 'USB 即插即用',
+    p6_spec2: 'SimHub DSP 特效',
+    p6_spec3: '多点安装',
+    p6_spec4: '合金结构',
+
+    p7_name: 'GT2 赛车方向盘',
+    p7_tag: '旗舰款',
+    p7_subtitle: '330mm · 翻毛皮握把',
+    p7_desc: '专为 GT 赛车打造的方向盘，采用高级翻毛皮握把、碳纤维面板、磁性拨片换挡，全面兼容 SimHub。',
+    p7_spec1: '330mm 直径',
+    p7_spec2: '翻毛皮握把',
+    p7_spec3: '碳纤维面板',
+    p7_spec4: '磁性拨片',
+
+    p8_name: 'G2 档位显示器',
+    p8_tag: '新款',
+    p8_subtitle: 'LED 档位显示',
+    p8_desc: '高亮 LED 档位指示器，支持多种显示模式。兼容所有主流模拟赛车游戏，实时档位读数一目了然。',
+    p8_spec1: 'LED 数字显示',
+    p8_spec2: '多模式切换',
+    p8_spec3: '通用安装',
+    p8_spec4: 'SimHub / HID',
+
+    p9_name: 'DT7 Pro 智能仪表盘',
+    p9_tag: '旗舰款',
+    p9_subtitle: '7寸高清触控 · 数据中心',
+    p9_desc: '旗舰级 7 寸高清触摸仪表盘，支持高级遥测、圈速计时、油耗管理，可完全自定义 SimHub 仪表布局，终极赛车数据中心。',
+    p9_spec1: '7寸 高清触摸屏',
+    p9_spec2: '完整遥测套件',
+    p9_spec3: '自定义仪表工作室',
+    p9_spec4: '可调支架',
   }
 };
 
@@ -580,6 +670,10 @@ const products = [
   { key: 'p3', img: 'images/product-wheel.jpg' },
   { key: 'p4', img: 'images/product-buttonbox.jpg' },
   { key: 'p5', img: 'images/product-dashboard.jpg' },
+  { key: 'p6', img: 'images/product-stmotor.jpg' },
+  { key: 'p7', img: 'images/product-gt2.jpg' },
+  { key: 'p8', img: 'images/product-g2gear.jpg' },
+  { key: 'p9', img: 'images/product-dt7pro.jpg' },
 ];
 
 // ====== RENDER PRODUCTS ======
