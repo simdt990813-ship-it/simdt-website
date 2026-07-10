@@ -70,6 +70,10 @@
   .logo-accent {
     color: var(--accent); font-weight: 300; letter-spacing: 1px;
   }
+  .logo-cn {
+    font-size: 15px; font-weight: 500; letter-spacing: 5px;
+    color: var(--gold); margin-left: 10px; opacity: 0.85;
+  }
   .nav-links { display: flex; align-items: center; gap: 36px; list-style: none; }
   .nav-links a {
     color: var(--text-muted); text-decoration: none; font-size: 14px;
@@ -309,7 +313,7 @@
 <!-- NAVBAR -->
 <nav class="navbar" id="navbar">
   <div class="navbar-inner">
-    <a href="#" class="logo"><img src="images/logo.png" alt="SIMDT"></a>
+    <a href="#" class="logo"><img src="images/logo.png" alt="SIMDT"><span class="logo-cn">夺途</span></a>
     <ul class="nav-links" id="navLinks">
       <li><a href="#products" data-i18n="nav_products">Products</a></li>
       <li><a href="#about" data-i18n="nav_about">About</a></li>
@@ -414,8 +418,8 @@
 
 <!-- FOOTER -->
 <footer>
-  <a href="#" class="logo"><img src="images/logo.png" alt="SIMDT" style="height:32px;"></a>
-  <p class="copyright" data-i18n="footer">SIMDT Racing Simulation Hardware. All rights reserved.</p>
+  <a href="#" class="logo"><img src="images/logo.png" alt="SIMDT" style="height:32px;"><span class="logo-cn" style="font-size:13px;">夺途</span></a>
+  <p class="copyright" data-i18n="footer">SIMDT（夺途）Racing Simulation Hardware. www.simdt.cn</p>
   <p class="contact-email"><a href="mailto:simdt@qq.com" data-i18n="contact_email">simdt@qq.com</a></p>
 </footer>
 
@@ -427,7 +431,7 @@ const i18n = {
     nav_about: 'About',
     nav_buy: 'Where to Buy',
 
-    hero_tag: 'Racing Simulation Hardware',
+    hero_tag: 'SIMDT · 夺途 — Racing Simulation Hardware',
     hero_title: 'Feel Every <span>Detail</span> of the Track',
     hero_desc: 'Professional-grade sim racing hardware engineered for immersion. From haptic feedback motors to wind simulation systems — every component is designed to put you in the driver\'s seat.',
     hero_btn_products: 'Explore Products',
@@ -456,7 +460,7 @@ const i18n = {
     buy_ebay: 'Fast delivery to US & EU',
     buy_visit: 'Visit Store →',
 
-    footer: 'SIMDT Racing Simulation Hardware. www.simdt.cn',
+    footer: 'SIMDT（夺途）Racing Simulation Hardware. www.simdt.cn',
     contact_email: 'simdt@qq.com',
 
     // Product cards
@@ -547,7 +551,7 @@ const i18n = {
     nav_about: '关于我们',
     nav_buy: '购买渠道',
 
-    hero_tag: '赛车模拟硬件',
+    hero_tag: 'SIMDT · 夺途 — 赛车模拟硬件',
     hero_title: '感受赛道<span>每一处细节</span>',
     hero_desc: '专业级赛车模拟硬件，专为沉浸式体验打造。从触觉反馈马达到风力模拟系统——每一个组件都致力于让你身临其境。',
     hero_btn_products: '探索产品',
@@ -559,7 +563,7 @@ const i18n = {
 
     about_label: '关于我们',
     about_title: '激情驱动',
-    about_desc: 'SIMDT 是一群赛车模拟爱好者和硬件工程师组成的团队，致力于创造最具沉浸感的赛车模拟体验。每一款产品都经过赛道严苛测试——无论是虚拟还是真实。',
+    about_desc: 'SIMDT（夺途）是一群赛车模拟爱好者和硬件工程师组成的团队，致力于创造最具沉浸感的赛车模拟体验。每一款产品都经过赛道严苛测试——无论是虚拟还是真实。',
     feature1_title: '精密工程',
     feature1_desc: '工业级组件、CNC 精密加工部件，严苛的品控确保每个产品在每一圈都能完美运行。',
     feature2_title: '全球社区',
@@ -576,7 +580,7 @@ const i18n = {
     buy_ebay: '美国及欧洲快速配送',
     buy_visit: '前往店铺 →',
 
-    footer: 'SIMDT 赛车模拟硬件 www.simdt.cn',
+    footer: 'SIMDT（夺途）赛车模拟硬件 www.simdt.cn',
     contact_email: 'simdt@qq.com',
 
     p1_name: '触觉反馈马达',
