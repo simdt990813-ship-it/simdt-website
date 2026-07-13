@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 88">
+  <!-- SIMDT Logo · Web optimized · transparent background -->
+  <g transform="translate(0,8) skewX(-12)">
+    <!-- SIM: font-weight 600 · letter-spacing 10 -->
+    <text x="0" y="54" font-family="Inter,Helvetica Neue,Arial,sans-serif" font-size="68" font-weight="600" letter-spacing="10" fill="#F0F0F0">SIM</text>
+    <!-- DT: font-weight 900 · letter-spacing 4 · x=163*68/80≈139 -->
+    <text x="139" y="54" font-family="Inter,Helvetica Neue,Arial,sans-serif" font-size="68" font-weight="900" letter-spacing="4" fill="#E63946">DT</text>
+    <!-- Start line · x2=293*68/80≈249 -->
+    <line x1="0" y1="66" x2="249" y2="66" stroke="#F0F0F0" stroke-width="2"/>
+    <!-- Start light · cx=301*68/80≈256 -->
+    <circle cx="256" cy="66" r="3.8" fill="#E63946"/>
+  </g>
+</svg>

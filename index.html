@@ -12,22 +12,36 @@
 <meta property="og:url" content="https://www.simdt.cn">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="SIMDT">
-<link rel="icon" href="favicon.ico" type="image/x-icon">
+<link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+<link rel="alternate icon" href="favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0a0a;
-    --bg-card: #141414;
+    /* SIMDT Brand Colors — per VI Guide */
+    --black: #0A0A0A;
+    --carbon: #141414;
+    --asphalt: #1E1E1E;
+    --graphite: #2A2A2A;
+    --red: #E63946;
+    --red-dark: #C1121F;
+    --red-glow: rgba(230, 57, 70, 0.25);
+    --gold: #C9A84C;
+    --gold-light: #E0C878;
+    --white: #F0F0F0;
+    --silver: #999999;
+    --silver-dark: #666666;
+    /* Legacy aliases */
+    --bg: var(--black);
+    --bg-card: var(--carbon);
     --bg-card-hover: #1a1a1a;
-    --surface: #1e1e1e;
-    --border: #2a2a2a;
-    --text: #f0f0f0;
-    --text-muted: #999;
-    --accent: #e63946;
-    --accent-glow: rgba(230, 57, 70, 0.25);
-    --gold: #c9a84c;
+    --surface: var(--asphalt);
+    --border: var(--graphite);
+    --text: var(--white);
+    --text-muted: var(--silver);
+    --accent: var(--red);
+    --accent-glow: var(--red-glow);
     --radius: 12px;
   }
 
@@ -145,7 +159,12 @@
 
   .hero-visual {
     position: absolute; right: 0; top: 50%; transform: translateY(-50%);
-    width: 480px; height: 480px; opacity: 0.5; pointer-events: none;
+    width: 520px; height: 520px; opacity: 0.18; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .hero-visual img {
+    width: 100%; height: 100%; object-fit: contain;
+    filter: drop-shadow(0 0 120px var(--red-glow));
   }
 
   /* ---- SECTION COMMON ---- */
@@ -281,6 +300,67 @@
   }
   .contact-email a:hover { color: var(--accent); }
 
+  /* ---- CONTACT SECTION ---- */
+  .contact-section { background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .contact-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start;
+  }
+  .contact-info h3 {
+    font-size: 20px; font-weight: 800; margin-bottom: 20px; color: var(--text);
+  }
+  .contact-detail {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 18px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 10px; margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .contact-detail:hover { border-color: var(--accent); }
+  .contact-icon {
+    width: 44px; height: 44px; background: rgba(230,57,70,0.1);
+    border-radius: 8px; display: flex; align-items: center;
+    justify-content: center; font-size: 20px; flex-shrink: 0;
+  }
+  .contact-meta h4 { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 3px; }
+  .contact-meta p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+  .contact-meta a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .contact-meta a:hover { text-decoration: underline; }
+  .contact-form-box {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 36px;
+  }
+  .contact-form-box h3 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+  .contact-form-box .form-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+  .form-group { margin-bottom: 18px; }
+  .form-group label {
+    display: block; font-size: 12px; font-weight: 700; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;
+  }
+  .form-group input, .form-group textarea {
+    width: 100%; background: var(--carbon); border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px 16px; color: var(--text);
+    font-size: 14px; font-family: 'Inter','Noto Sans SC',sans-serif;
+    transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group textarea:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .form-group textarea { min-height: 120px; resize: vertical; }
+  .form-submit {
+    width: 100%; background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; padding: 14px 32px;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: all 0.25s;
+  }
+  .form-submit:hover { background: #ff4d5a; box-shadow: 0 8px 30px var(--red-glow); }
+  .form-note { font-size: 12px; color: var(--text-muted); margin-top: 12px; text-align: center; }
+  .company-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.2);
+    padding: 5px 14px; border-radius: 20px; font-size: 12px;
+    color: var(--gold); font-weight: 600; margin-bottom: 24px;
+    letter-spacing: 1px;
+  }
+
   /* ---- RESPONSIVE ---- */
   @media (max-width: 1024px) {
     .hero { flex-direction: column; text-align: center; padding-bottom: 60px; }
@@ -290,6 +370,7 @@
     .hero-visual { display: none; }
     .about-grid { grid-template-columns: 1fr; gap: 40px; }
     .buy-grid { grid-template-columns: 1fr; }
+    .contact-grid { grid-template-columns: 1fr; gap: 32px; }
   }
   @media (max-width: 768px) {
     .hero { padding: 100px 24px 60px; }
@@ -316,11 +397,12 @@
 <!-- NAVBAR -->
 <nav class="navbar" id="navbar">
   <div class="navbar-inner">
-    <a href="#" class="logo"><img src="images/logo.png" alt="SIMDT"><span class="logo-cn">夺途</span></a>
+    <a href="#" class="logo"><img src="images/logo.svg" alt="SIMDT"><span class="logo-cn">夺途</span></a>
     <ul class="nav-links" id="navLinks">
       <li><a href="#products" data-i18n="nav_products">Products</a></li>
       <li><a href="#about" data-i18n="nav_about">About</a></li>
       <li><a href="#buy" data-i18n="nav_buy">Where to Buy</a></li>
+      <li><a href="#contact" data-i18n="nav_contact">Contact</a></li>
     </ul>
     <div style="display:flex;align-items:center;gap:16px;">
       <button class="lang-toggle" id="langToggle" onclick="toggleLang()">EN</button>
@@ -331,13 +413,16 @@
 <!-- HERO -->
 <section class="hero" id="home">
   <div class="hero-content fade-in">
-    <div class="hero-tag" data-i18n="hero_tag">Racing Simulation Hardware</div>
+    <div class="hero-tag" data-i18n="hero_tag">SIMDT · 夺途 — Racing Simulation Hardware</div>
     <h1 data-i18n="hero_title">Feel Every <span>Detail</span> of the Track</h1>
     <p data-i18n="hero_desc">Professional-grade sim racing hardware engineered for immersion. From haptic feedback motors to wind simulation systems — every component is designed to put you in the driver's seat.</p>
     <div class="hero-cta">
       <a href="#products" class="btn-primary" data-i18n="hero_btn_products">Explore Products</a>
       <a href="#buy" class="btn-outline" data-i18n="hero_btn_buy">Where to Buy</a>
     </div>
+  </div>
+  <div class="hero-visual">
+    <img src="images/logo.svg" alt="SIMDT" loading="eager">
   </div>
 </section>
 
@@ -419,10 +504,87 @@
   </div>
 </section>
 
+<!-- CONTACT -->
+<section class="contact-section" id="contact">
+  <div class="section-inner">
+    <div class="section-label fade-in" data-i18n="contact_label">Get in Touch</div>
+    <h2 class="section-title fade-in" data-i18n="contact_title">Contact Us</h2>
+    <p class="section-desc fade-in" data-i18n="contact_desc">Have questions about our products, wholesale inquiries, or partnership opportunities? We'd love to hear from you.</p>
+
+    <div class="contact-grid fade-in">
+      <!-- Left: Contact Info -->
+      <div class="contact-info">
+        <div class="company-badge">SIMDT · 夺途</div>
+        <h3 data-i18n="contact_reach">Reach Us</h3>
+
+        <div class="contact-detail">
+          <div class="contact-icon">&#9993;</div>
+          <div class="contact-meta">
+            <h4 data-i18n="contact_email_label">Email</h4>
+            <p><a href="mailto:simdt@qq.com">simdt@qq.com</a></p>
+          </div>
+        </div>
+
+        <div class="contact-detail">
+          <div class="contact-icon">&#127760;</div>
+          <div class="contact-meta">
+            <h4 data-i18n="contact_web_label">Website</h4>
+            <p><a href="https://www.simdt.cn">www.simdt.cn</a></p>
+          </div>
+        </div>
+
+        <div class="contact-detail">
+          <div class="contact-icon">&#128205;</div>
+          <div class="contact-meta">
+            <h4 data-i18n="contact_location_label">Location</h4>
+            <p data-i18n="contact_location">Zhongshan, Guangdong, China</p>
+          </div>
+        </div>
+
+        <div class="contact-detail">
+          <div class="contact-icon">&#128230;</div>
+          <div class="contact-meta">
+            <h4 data-i18n="contact_channels_label">Purchase Channels</h4>
+            <p data-i18n="contact_channels">Taobao · AliExpress · eBay</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Contact Form -->
+      <div class="contact-form-box">
+        <h3 data-i18n="form_title">Send a Message</h3>
+        <p class="form-subtitle" data-i18n="form_subtitle">We typically respond within 24 hours.</p>
+        <form action="mailto:simdt@qq.com" method="post" enctype="text/plain">
+          <div class="form-group">
+            <label data-i18n="form_name_label">Your Name</label>
+            <input type="text" name="name" placeholder="Your name" data-i18n-placeholder="form_name_placeholder">
+          </div>
+          <div class="form-group">
+            <label data-i18n="form_email_label">Email Address</label>
+            <input type="email" name="email" placeholder="your@email.com" data-i18n-placeholder="form_email_placeholder">
+          </div>
+          <div class="form-group">
+            <label data-i18n="form_subject_label">Subject</label>
+            <input type="text" name="subject" placeholder="Inquiry about..." data-i18n-placeholder="form_subject_placeholder">
+          </div>
+          <div class="form-group">
+            <label data-i18n="form_message_label">Message</label>
+            <textarea name="message" placeholder="Tell us how we can help..." data-i18n-placeholder="form_message_placeholder"></textarea>
+          </div>
+          <button type="submit" class="form-submit" data-i18n="form_submit">Send Message</button>
+          <p class="form-note" data-i18n="form_note">This form opens your default email client. You can also email us directly at simdt@qq.com.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- FOOTER -->
 <footer>
-  <a href="#" class="logo"><img src="images/logo.png" alt="SIMDT" style="height:32px;"><span class="logo-cn" style="font-size:13px;">夺途</span></a>
+  <a href="#" class="logo"><img src="images/logo.svg" alt="SIMDT" style="height:28px;"><span class="logo-cn" style="font-size:12px;">夺途</span></a>
+  <p style="font-size:11px;color:var(--gold);letter-spacing:2px;margin:6px 0;font-weight:600;">Feel Every Detail of the Track</p>
   <p class="copyright" data-i18n="footer">SIMDT（夺途）Racing Simulation Hardware. www.simdt.cn</p>
+  <p class="copyright" style="font-size:11px;opacity:0.5;margin-top:4px;" data-i18n="footer_company">Zhongshan Qiyu Technology Co., Ltd.</p>
   <p class="contact-email"><a href="mailto:simdt@qq.com" data-i18n="contact_email">simdt@qq.com</a></p>
 </footer>
 
@@ -433,8 +595,9 @@ const i18n = {
     nav_products: 'Products',
     nav_about: 'About',
     nav_buy: 'Where to Buy',
+    nav_contact: 'Contact',
 
-    hero_tag: 'SIMDT · 夺途 — Racing Simulation Hardware',
+    hero_tag: 'SIMDT · 夺途 (Duó Tú) — Racing Simulation Hardware',
     hero_title: 'Feel Every <span>Detail</span> of the Track',
     hero_desc: 'Professional-grade sim racing hardware engineered for immersion. From haptic feedback motors to wind simulation systems — every component is designed to put you in the driver\'s seat.',
     hero_btn_products: 'Explore Products',
@@ -464,7 +627,32 @@ const i18n = {
     buy_visit: 'Visit Store →',
 
     footer: 'SIMDT（夺途）Racing Simulation Hardware. www.simdt.cn',
+    footer_company: 'Zhongshan Qiyu Technology Co., Ltd.',
     contact_email: 'simdt@qq.com',
+
+    // Contact section
+    contact_label: 'Get in Touch',
+    contact_title: 'Contact Us',
+    contact_desc: 'Have questions about our products, wholesale inquiries, or partnership opportunities? We\'d love to hear from you.',
+    contact_reach: 'Reach Us',
+    contact_email_label: 'Email',
+    contact_web_label: 'Website',
+    contact_location_label: 'Location',
+    contact_location: 'Zhongshan, Guangdong, China',
+    contact_channels_label: 'Purchase Channels',
+    contact_channels: 'Taobao · AliExpress · eBay',
+    form_title: 'Send a Message',
+    form_subtitle: 'We typically respond within 24 hours.',
+    form_name_label: 'Your Name',
+    form_name_placeholder: 'Your name',
+    form_email_label: 'Email Address',
+    form_email_placeholder: 'your@email.com',
+    form_subject_label: 'Subject',
+    form_subject_placeholder: 'Inquiry about...',
+    form_message_label: 'Message',
+    form_message_placeholder: 'Tell us how we can help...',
+    form_submit: 'Send Message',
+    form_note: 'This form opens your default email client. You can also email us directly at simdt@qq.com.',
 
     // Product cards
     p1_name: 'Haptic Feedback Motor',
@@ -553,6 +741,7 @@ const i18n = {
     nav_products: '产品线',
     nav_about: '关于我们',
     nav_buy: '购买渠道',
+    nav_contact: '联系我们',
 
     hero_tag: 'SIMDT · 夺途 — 赛车模拟硬件',
     hero_title: '感受赛道<span>每一处细节</span>',
@@ -584,7 +773,32 @@ const i18n = {
     buy_visit: '前往店铺 →',
 
     footer: 'SIMDT（夺途）赛车模拟硬件 www.simdt.cn',
+    footer_company: '中山市旗鱼科技有限公司',
     contact_email: 'simdt@qq.com',
+
+    // Contact section
+    contact_label: '联系我们',
+    contact_title: '取得联系',
+    contact_desc: '对产品有疑问、批发询价或合作意向？我们期待与您沟通。',
+    contact_reach: '联系方式',
+    contact_email_label: '电子邮箱',
+    contact_web_label: '官网',
+    contact_location_label: '所在地',
+    contact_location: '中国广东中山',
+    contact_channels_label: '购买渠道',
+    contact_channels: '淘宝 · 速卖通 · eBay',
+    form_title: '发送消息',
+    form_subtitle: '我们通常在 24 小时内回复。',
+    form_name_label: '您的姓名',
+    form_name_placeholder: '请输入姓名',
+    form_email_label: '电子邮箱',
+    form_email_placeholder: 'your@email.com',
+    form_subject_label: '主题',
+    form_subject_placeholder: '咨询内容...',
+    form_message_label: '留言内容',
+    form_message_placeholder: '请描述您的需求...',
+    form_submit: '发送消息',
+    form_note: '此表单将通过您的默认邮箱客户端发送。您也可以直接发送邮件至 simdt@qq.com。',
 
     p1_name: '触觉反馈马达',
     p1_tag: '热销爆款',
@@ -721,12 +935,15 @@ function switchLang(lang) {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
     if (!i18n[lang][key]) return;
-    // hero_title has inner <span>, use innerHTML
     if (key === 'hero_title') {
       el.innerHTML = i18n[lang][key];
     } else {
       el.textContent = i18n[lang][key];
     }
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (i18n[lang][key]) el.placeholder = i18n[lang][key];
   });
   renderProducts();
   document.getElementById('langToggle').textContent = lang === 'zh' ? 'EN' : '中文';
