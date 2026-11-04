@@ -636,6 +636,8 @@ const dict = {
     pay_wechat: '微信支付',
     pay_alipay: '支付宝',
     pay_not_ready: '该支付方式待接入，请在后台配置商户密钥',
+    pay_invoice: '下单后邮件确认付款',
+    pay_invoice_desc: '提交订单后我们会通过邮件与你确认付款方式（PayPal / 银行转账），确认到账后再安排发货。',
     place_order: '提交订单',
     order_success: '下单成功',
     order_no: '订单号',
@@ -673,6 +675,7 @@ const dict = {
     backend_error: '服务器请求失败，请稍后重试',
     order_guest_hint: '订单已提交，订单号',
     order_guest_save: '请保存订单号。注册登录后可随时查看订单状态。',
+    order_pending_note: '订单已进入待支付状态，我们会在 1 个工作日内通过邮件与你确认付款方式（PayPal / 银行转账）。',
     admin_title: '管理后台',
     admin_products: '商品管理',
     admin_orders: '订单管理',
@@ -766,6 +769,8 @@ const dict = {
     pay_wechat: 'WeChat Pay',
     pay_alipay: 'Alipay',
     pay_not_ready: 'This method is not connected yet — configure merchant keys in admin',
+    pay_invoice: 'Payment confirmed by email',
+    pay_invoice_desc: 'After you submit the order we will email you to confirm payment (PayPal / bank transfer). We ship once payment is received.',
     place_order: 'Place Order',
     order_success: 'Order placed',
     order_no: 'Order No.',
@@ -803,6 +808,7 @@ const dict = {
     backend_error: 'Server request failed, please retry',
     order_guest_hint: 'Order submitted. Order number',
     order_guest_save: 'Save this order number. Sign in to track your orders anytime.',
+    order_pending_note: 'Your order is awaiting payment. We will email you within 1 business day to confirm the payment method (PayPal / bank transfer).',
     admin_title: 'Admin',
     admin_products: 'Products',
     admin_orders: 'Orders',
@@ -1598,6 +1604,34 @@ function payOpt(method, key) {
   return `<div class="pay-opt locked" data-method="${method}"><b>${labelMap[method]}</b><span class="disabled-tag">${t('pay_not_ready')}</span></div>`
 }
 
+// 一个支付渠道都没接时，不要给客户看「演示支付（测试）」和「待接入」
+// 这类内部话术，改成一句正经的「下单后邮件确认付款方式」。
+function hasPaymentChannel() {
+  return Object.values(PAYMENT_KEYS || {}).some(Boolean)
+}
+
+function defaultPayMethod() {
+  return hasPaymentChannel() ? 'demo' : 'invoice'
+}
+
+function payMethodsHTML() {
+  if (!hasPaymentChannel()) {
+    return `<div class="pay-methods" id="pay-methods">
+      <div class="pay-opt active" data-method="invoice" style="display:block">
+        <b style="display:block;margin-bottom:6px">${t('pay_invoice')}</b>
+        <div class="order-meta" style="line-height:1.6">${t('pay_invoice_desc')}</div>
+      </div>
+    </div>`
+  }
+  return `<div class="pay-methods" id="pay-methods">
+    <div class="pay-opt active" data-method="demo"><b>${t('pay_demo')}</b></div>
+    ${payOpt('stripe', PAYMENT_KEYS.stripe)}
+    ${payOpt('paypal', PAYMENT_KEYS.paypal)}
+    ${payOpt('wechat', PAYMENT_KEYS.wechat)}
+    ${payOpt('alipay', PAYMENT_KEYS.alipay)}
+  </div>`
+}
+
 async function checkout(ctx) {
   const app = document.getElementById('app')
   const items = getCart()
@@ -1618,13 +1652,7 @@ async function checkout(ctx) {
         <h3 style="margin-bottom:10px">${t('order_items')}</h3>
         ${items.map(cartItemHTML).join('')}
         <h3 style="margin:14px 0 10px">${t('payment')}</h3>
-        <div class="pay-methods" id="pay-methods">
-          <div class="pay-opt active" data-method="demo"><b>${t('pay_demo')}</b></div>
-          ${payOpt('stripe', PAYMENT_KEYS.stripe)}
-          ${payOpt('paypal', PAYMENT_KEYS.paypal)}
-          ${payOpt('wechat', PAYMENT_KEYS.wechat)}
-          ${payOpt('alipay', PAYMENT_KEYS.alipay)}
-        </div>
+        ${payMethodsHTML()}
         <div class="summary" style="margin-top:14px">
           <div class="line"><span>${t('cart_subtotal')}</span><span>${money(cartSubtotal())}</span></div>
           <div class="total line"><span>${t('order_total')}</span><span>${money(cartSubtotal())}</span></div>
@@ -1632,7 +1660,7 @@ async function checkout(ctx) {
         </div>
       </div>
     </div>`
-  let method = 'demo'
+  let method = defaultPayMethod()
   const pm = app.querySelector('#pay-methods')
   pm.addEventListener('click', (e) => {
     const opt = e.target.closest('.pay-opt')
@@ -1656,7 +1684,7 @@ async function checkout(ctx) {
       subtotal: cartSubtotal(),
       total: cartSubtotal(),
       shipping_fee: 0,
-      status: method === 'demo' ? 'paid' : 'pending',
+      status: 'pending',
       payment_method: method,
       customer_email: email,
       shipping_name: name,
@@ -1683,7 +1711,8 @@ async function checkout(ctx) {
         app.innerHTML = `<div class="empty" style="padding:40px 20px">
           <div style="font-size:18px;color:var(--gold);margin-bottom:12px">${t('order_guest_hint')}</div>
           <div style="font-size:26px;font-weight:700;letter-spacing:1px;margin-bottom:16px">${(created && created.order_no) || order.order_no}</div>
-          <div style="color:var(--muted);margin-bottom:20px">${t('order_guest_save')}</div>
+          <div style="color:var(--muted);margin-bottom:8px">${t('order_guest_save')}</div>
+          <div style="color:var(--gold);margin-bottom:20px;font-size:13px">${t('order_pending_note')}</div>
           <a class="btn btn-primary" href="#/login">${t('nav_login')}</a>
           <a class="btn" href="#/products" style="margin-left:8px">${t('nav_products')}</a>
         </div>`
