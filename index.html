@@ -158,13 +158,16 @@
   .btn-outline:hover { border-color: #fff; }
 
   .hero-visual {
-    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
-    width: 520px; height: 520px; opacity: 0.18; pointer-events: none;
-    display: flex; align-items: center; justify-content: center;
+    position: absolute; top: 0; bottom: 0;
+    right: 0;
+    right: calc(-1 * max(0px, (100vw - 1280px) / 2));  /* 贴到浏览器右边缘，不留硬切口 */
+    width: clamp(500px, 45vw, 680px); opacity: 0.9; pointer-events: none;
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,.22) 24%, rgba(0,0,0,.72) 46%, #000 62%);
+    mask-image: linear-gradient(to right, transparent 0%, rgba(0,0,0,.22) 24%, rgba(0,0,0,.72) 46%, #000 62%);
   }
   .hero-visual img {
-    width: 100%; height: 100%; object-fit: contain;
-    filter: drop-shadow(0 0 120px var(--red-glow));
+    width: 100%; height: 100%; object-fit: cover; object-position: 44% 48%;
+    filter: saturate(1.1) contrast(1.08) brightness(1.02) drop-shadow(0 0 90px var(--red-glow));
   }
 
   /* ---- SECTION COMMON ---- */
@@ -383,6 +386,22 @@
     letter-spacing: 1px;
   }
 
+  /* ---- SHOP OVERLAY（商店内嵌兜底，正常跳转可用时不触发）---- */
+  #shop-overlay {
+    position: fixed; inset: 0; z-index: 9999; background: var(--bg);
+    display: none; opacity: 0; transition: opacity .2s ease;
+  }
+  #shop-overlay.open { display: block; opacity: 1; }
+  #shop-overlay iframe { width: 100%; height: 100%; border: 0; display: block; }
+  #shop-close {
+    position: absolute; top: 14px; right: 16px; z-index: 2;
+    width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+    background: rgba(20,20,20,.92); border: 1px solid var(--border); color: #fff;
+    font-size: 18px; line-height: 1; display: flex; align-items: center; justify-content: center;
+  }
+  #shop-close:hover { border-color: var(--accent); color: var(--accent); }
+  body.shop-open { overflow: hidden; }
+
   /* ---- RESPONSIVE ---- */
   @media (max-width: 1024px) {
     .hero { flex-direction: column; text-align: center; padding-bottom: 60px; }
@@ -425,6 +444,7 @@
       <li><a href="#products" data-i18n="nav_products">Products</a></li>
       <li><a href="#about" data-i18n="nav_about">About</a></li>
       <li><a href="#buy" data-i18n="nav_buy">Where to Buy</a></li>
+      <li><a href="store/index.html" data-i18n="nav_shop">Shop</a></li>
       <li><a href="#contact" data-i18n="nav_contact">Contact</a></li>
     </ul>
     <div style="display:flex;align-items:center;gap:16px;">
@@ -441,11 +461,11 @@
     <p data-i18n="hero_desc">Professional-grade sim racing hardware engineered for immersion. From haptic feedback motors to wind simulation systems — every component is designed to put you in the driver's seat.</p>
     <div class="hero-cta">
       <a href="#products" class="btn-primary" data-i18n="hero_btn_products">Explore Products</a>
-      <a href="#buy" class="btn-outline" data-i18n="hero_btn_buy">Where to Buy</a>
+      <a href="store/index.html" class="btn-outline" data-i18n="hero_btn_shop">Shop Now</a>
     </div>
   </div>
-  <div class="hero-visual">
-    <img src="images/logo.svg" alt="SIMDT" loading="eager">
+  <div class="hero-visual" aria-hidden="true">
+    <img src="images/scene-dt7pro-rgb.jpg" alt="" loading="eager" decoding="async">
   </div>
 </section>
 
@@ -479,7 +499,7 @@
             <div class="feature-icon">&#127758;</div>
             <div class="feature-text">
               <h4 data-i18n="feature2_title">Global Community</h4>
-              <p data-i18n="feature2_desc">Trusted by sim racers worldwide. Our products ship to 50+ countries across Taobao, AliExpress, and eBay.</p>
+              <p data-i18n="feature2_desc">Trusted by sim racers worldwide. Our products ship to 50+ countries and regions.</p>
             </div>
           </li>
           <li>
@@ -501,27 +521,15 @@
 <!-- WHERE TO BUY -->
 <section class="buy-section" id="buy">
   <div class="section-inner">
-    <div class="section-label fade-in" data-i18n="buy_label">Where to Buy</div>
-    <h2 class="section-title fade-in" data-i18n="buy_title">Get Your SIMDT Gear</h2>
-    <p class="section-desc fade-in" data-i18n="buy_desc">Available on major platforms worldwide. Choose your preferred marketplace.</p>
-    <div class="buy-grid fade-in">
-      <a href="#" class="buy-card">
-        <div class="buy-icon">&#x1F1E8;&#x1F1F3;</div>
-        <h4>Taobao</h4>
-        <p data-i18n="buy_taobao">Official SIMDT flagship store</p>
-        <span class="buy-arrow" data-i18n="buy_visit">Visit Store &rarr;</span>
-      </a>
-      <a href="#" class="buy-card">
-        <div class="buy-icon">&#x1F30D;</div>
-        <h4>AliExpress</h4>
-        <p data-i18n="buy_aliexpress">Worldwide shipping available</p>
-        <span class="buy-arrow" data-i18n="buy_visit">Visit Store &rarr;</span>
-      </a>
-      <a href="#" class="buy-card">
-        <div class="buy-icon">&#x1F4E6;</div>
-        <h4>eBay</h4>
-        <p data-i18n="buy_ebay">Fast delivery to US &amp; EU</p>
-        <span class="buy-arrow" data-i18n="buy_visit">Visit Store &rarr;</span>
+    <div class="section-label fade-in" data-i18n="buy_label">Official Store</div>
+    <h2 class="section-title fade-in" data-i18n="buy_title">Shop the Official SIMDT Store</h2>
+    <p class="section-desc fade-in" data-i18n="buy_desc">Order directly from SIMDT — genuine products, worldwide shipping.</p>
+    <div class="buy-grid fade-in" style="grid-template-columns:1fr;max-width:520px">
+      <a href="store/index.html" class="buy-card">
+        <div class="buy-icon">&#x1F6D2;</div>
+        <h4 data-i18n="buy_store_name">SIMDT Official Store</h4>
+        <p data-i18n="buy_store_desc">Browse the full lineup and order online</p>
+        <span class="buy-arrow" data-i18n="buy_store_go">Enter Store &rarr;</span>
       </a>
     </div>
   </div>
@@ -567,8 +575,8 @@
         <div class="contact-detail">
           <div class="contact-icon">&#128230;</div>
           <div class="contact-meta">
-            <h4 data-i18n="contact_channels_label">Purchase Channels</h4>
-            <p data-i18n="contact_channels">Taobao · AliExpress · eBay</p>
+            <h4 data-i18n="contact_channels_label">Official Store</h4>
+            <p><a href="store/index.html" data-i18n="contact_channels" style="color:inherit;text-decoration:underline;text-underline-offset:3px">Visit the Official Store →</a></p>
           </div>
         </div>
       </div>
@@ -655,13 +663,14 @@ const i18n = {
     nav_products: 'Products',
     nav_about: 'About',
     nav_buy: 'Where to Buy',
+    nav_shop: 'Shop',
     nav_contact: 'Contact',
 
     hero_tag: 'SIMDT · 夺途 (Duó Tú) — Racing Simulation Hardware',
     hero_title: 'Feel Every <span>Detail</span> of the Track',
     hero_desc: 'Professional-grade sim racing hardware engineered for immersion. From haptic feedback motors to wind simulation systems — every component is designed to put you in the driver\'s seat.',
     hero_btn_products: 'Explore Products',
-    hero_btn_buy: 'Where to Buy',
+    hero_btn_shop: 'Shop Now',
 
     products_label: 'Product Line',
     products_title: 'Our Hardware',
@@ -673,18 +682,17 @@ const i18n = {
     feature1_title: 'Precision Engineering',
     feature1_desc: 'Industrial-grade components, CNC-machined parts, and rigorous QC ensure every product performs flawlessly lap after lap.',
     feature2_title: 'Global Community',
-    feature2_desc: 'Trusted by sim racers worldwide. Our products ship to 50+ countries across Taobao, AliExpress, and eBay.',
+    feature2_desc: 'Trusted by sim racers worldwide. Our products ship to 50+ countries and regions.',
     feature3_title: 'SimHub Ready',
     feature3_desc: 'Full compatibility with SimHub and major sim titles — iRacing, Assetto Corsa, rFactor 2, and more. Plug, configure, race.',
     about_visual_text: 'Racing Simulation Hardware',
 
-    buy_label: 'Where to Buy',
-    buy_title: 'Get Your SIMDT Gear',
-    buy_desc: 'Available on major platforms worldwide. Choose your preferred marketplace.',
-    buy_taobao: 'Official SIMDT flagship store',
-    buy_aliexpress: 'Worldwide shipping available',
-    buy_ebay: 'Fast delivery to US & EU',
-    buy_visit: 'Visit Store →',
+    buy_label: 'Official Store',
+    buy_title: 'Shop the Official SIMDT Store',
+    buy_desc: 'Order directly from SIMDT — genuine products, worldwide shipping.',
+    buy_store_name: 'SIMDT Official Store',
+    buy_store_desc: 'Browse the full lineup and order online',
+    buy_store_go: 'Enter Store →',
 
     footer: 'SIMDT（夺途）Racing Simulation Hardware. www.simdt.cn',
     footer_company: 'Zhongshan Qiyu Technology Co., Ltd.',
@@ -716,8 +724,8 @@ const i18n = {
     contact_web_label: 'Website',
     contact_location_label: 'Location',
     contact_location: 'Zhongshan, Guangdong, China',
-    contact_channels_label: 'Purchase Channels',
-    contact_channels: 'Taobao · AliExpress · eBay',
+    contact_channels_label: 'Official Store',
+    contact_channels: 'Visit the Official Store →',
     form_title: 'Send a Message',
     form_subtitle: 'We typically respond within 24 hours.',
     form_name_label: 'Your Name',
@@ -818,13 +826,14 @@ const i18n = {
     nav_products: '产品线',
     nav_about: '关于我们',
     nav_buy: '购买渠道',
+    nav_shop: '商店',
     nav_contact: '联系我们',
 
     hero_tag: 'SIMDT · 夺途 — 赛车模拟硬件',
     hero_title: '感受赛道<span>每一处细节</span>',
     hero_desc: '专业级赛车模拟硬件，专为沉浸式体验打造。从触觉反馈马达到风力模拟系统——每一个组件都致力于让你身临其境。',
     hero_btn_products: '探索产品',
-    hero_btn_buy: '购买渠道',
+    hero_btn_shop: '立即选购',
 
     products_label: '产品线',
     products_title: '我们的硬件',
@@ -836,18 +845,17 @@ const i18n = {
     feature1_title: '精密工程',
     feature1_desc: '工业级组件、CNC 精密加工部件，严苛的品控确保每个产品在每一圈都能完美运行。',
     feature2_title: '全球社区',
-    feature2_desc: '深受全球模拟赛车玩家信赖。产品通过淘宝、速卖通和 eBay 销往 50+ 个国家和地区。',
+    feature2_desc: '深受全球模拟赛车玩家信赖，产品销往 50+ 个国家和地区。',
     feature3_title: 'SimHub 兼容',
     feature3_desc: '全面兼容 SimHub 及主流模拟赛车游戏——iRacing、Assetto Corsa、rFactor 2 等。即插即配即赛。',
     about_visual_text: '赛车模拟硬件',
 
-    buy_label: '购买渠道',
-    buy_title: '入手你的 SIMDT 装备',
-    buy_desc: '在全球主流平台均有销售，选择你喜欢的渠道。',
-    buy_taobao: 'SIMDT 官方旗舰店',
-    buy_aliexpress: '全球配送',
-    buy_ebay: '美国及欧洲快速配送',
-    buy_visit: '前往店铺 →',
+    buy_label: '官方商店',
+    buy_title: '在 SIMDT 官方商店直接下单',
+    buy_desc: '官方直营，正品保障，全球配送。',
+    buy_store_name: 'SIMDT 官方商店',
+    buy_store_desc: '浏览全线产品，在线下单',
+    buy_store_go: '进入商店 →',
 
     footer: 'SIMDT（夺途）赛车模拟硬件 www.simdt.cn',
     footer_company: '中山市旗鱼科技有限公司',
@@ -879,8 +887,8 @@ const i18n = {
     contact_web_label: '官网',
     contact_location_label: '所在地',
     contact_location: '中国广东中山',
-    contact_channels_label: '购买渠道',
-    contact_channels: '淘宝 · 速卖通 · eBay',
+    contact_channels_label: '官方商店',
+    contact_channels: '在官方商店在线选购 →',
     form_title: '发送消息',
     form_subtitle: '我们通常在 24 小时内回复。',
     form_name_label: '您的姓名',
@@ -1063,6 +1071,2119 @@ function initFadeAnimations() {
 document.addEventListener('DOMContentLoaded', () => {
   switchLang('zh');
 });
+</script>
+<!-- SHOP_EMBED_START -->
+<template id="simdt-shop-embed">
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SIMDT · Sim Racing Store</title>
+<style>
+:root {
+  --black: #0A0A0A;
+  --red: #E63946;
+  --gold: #C9A84C;
+  --bg: #0A0A0A;
+  --panel: #141414;
+  --panel-2: #1c1c1c;
+  --text: #f5f5f5;
+  --muted: #9a9a9a;
+  --border: #2a2a2a;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+
+/* ---------- Header ---------- */
+#site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(10, 10, 10, 0.92);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(8px);
+}
+.nav-top {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 20px;
+}
+.brand {
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--red);
+}
+.nav-links { display: flex; gap: 16px; align-items: center; flex: 1; flex-wrap: wrap; }
+.nav-link { color: var(--text); font-size: 14px; opacity: .85; transition: .15s; }
+.nav-link:hover { opacity: 1; color: var(--gold); }
+.nav-admin { color: var(--gold); font-weight: 600; }
+.nav-user { font-size: 12px; color: var(--muted); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.badge {
+  background: var(--red);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 11px;
+  padding: 1px 7px;
+  margin-left: 2px;
+}
+.nav-tools { display: flex; gap: 8px; }
+.tool-btn {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.tool-btn:hover { border-color: var(--gold); }
+
+/* ---------- Layout ---------- */
+#app { flex: 1; max-width: 1180px; width: 100%; margin: 0 auto; padding: 28px 20px 60px; }
+.section { margin-bottom: 40px; }
+.section-title { font-size: 22px; font-weight: 700; margin-bottom: 18px; border-left: 4px solid var(--red); padding-left: 12px; }
+
+/* ---------- Hero ---------- */
+.hero {
+  background: linear-gradient(135deg, #141414 0%, #0a0a0a 60%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 64px 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before { content: ''; position: absolute; left: 0; top: 0; height: 6px; width: 100%; background: linear-gradient(90deg, var(--red), var(--gold)); }
+.hero-title { font-size: 38px; font-weight: 800; letter-spacing: 1px; }
+.hero-sub { color: var(--muted); margin: 14px 0 26px; font-size: 16px; }
+.hero-cta { display: inline-block; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-block;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: .15s;
+}
+.btn:hover { border-color: var(--gold); }
+.btn-primary { background: var(--red); border-color: var(--red); color: #fff; font-weight: 600; }
+.btn-primary:hover { filter: brightness(1.08); }
+.btn-gold { background: var(--gold); border-color: var(--gold); color: #1a1a1a; font-weight: 700; }
+.btn-danger { background: transparent; border-color: var(--red); color: var(--red); }
+.btn-block { display: block; width: 100%; text-align: center; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ---------- Product grid ---------- */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: .15s;
+}
+.card:hover { border-color: var(--gold); transform: translateY(-2px); }
+.card-img { aspect-ratio: 4/3; background: #000; overflow: hidden; }
+.card-img img { width: 100%; height: 100%; object-fit: cover; }
+.card-body { padding: 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.card-cat { font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; }
+.card-title { font-weight: 600; font-size: 15px; line-height: 1.35; }
+.card-title .zh { display: block; color: var(--muted); font-weight: 400; font-size: 12.5px; margin-top: 3px; }
+.card-price { color: var(--red); font-weight: 700; font-size: 18px; margin-top: auto; }
+
+/* 规格标签（详情页） */
+.spec-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 4px; }
+.spec-pill {
+  font-size: 12px; padding: 4px 10px; border: 1px solid var(--border);
+  border-radius: 999px; color: var(--muted); background: var(--panel);
+}
+.card-actions { display: flex; gap: 8px; margin-top: 6px; }
+.card-actions .btn { flex: 1; text-align: center; padding: 8px; }
+
+/* ---------- Filters ---------- */
+.filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.chip {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--muted);
+  padding: 6px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.chip.active { color: #1a1a1a; background: var(--gold); border-color: var(--gold); font-weight: 600; }
+
+/* ---------- Forms ---------- */
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.field input, .field select, .field textarea {
+  width: 100%;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-family: inherit;
+}
+.field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--gold); }
+.row { display: flex; gap: 14px; }
+.row > * { flex: 1; }
+
+/* ---------- Cart / Checkout ---------- */
+.cart-item, .order-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.cart-item img, .order-item img { width: 84px; height: 64px; object-fit: cover; border-radius: 6px; background: #000; }
+.cart-item .info { flex: 1; }
+.cart-qty { width: 64px; }
+.summary {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-top: 10px;
+}
+.summary .line { display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--muted); }
+.summary .total { color: var(--text); font-weight: 700; font-size: 18px; border-top: 1px solid var(--border); padding-top: 10px; }
+
+.pay-methods { display: flex; flex-direction: column; gap: 10px; }
+.pay-opt {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid var(--border); background: var(--panel);
+  border-radius: 8px; padding: 14px; cursor: pointer;
+}
+.pay-opt.active { border-color: var(--gold); }
+.pay-opt .disabled-tag { margin-left: auto; font-size: 12px; color: var(--muted); }
+.pay-opt.locked { opacity: .55; cursor: not-allowed; }
+
+/* ---------- Orders ---------- */
+.order-items { margin-top: 10px; }
+.order-item { display: flex; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--border); }
+.order-item img { width: 48px; height: 36px; object-fit: cover; border-radius: 4px; }
+.order-meta { color: var(--muted); font-size: 13px; }
+.status-pill { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; border: 1px solid var(--border); }
+.status-paid { color: #4ade80; border-color: #4ade80; }
+.status-pending { color: var(--gold); border-color: var(--gold); }
+.status-shipped { color: #60a5fa; border-color: #60a5fa; }
+.status-cancelled, .status-failed { color: var(--muted); }
+
+/* ---------- Admin ---------- */
+.admin-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th, .table td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); }
+.table th { color: var(--muted); font-weight: 600; }
+.table img { width: 56px; height: 42px; object-fit: cover; border-radius: 4px; }
+.table select {
+  background: #141414; color: var(--text); border: 1px solid var(--border);
+  border-radius: 6px; padding: 6px 8px; font-size: 12px; margin-right: 6px;
+}
+.table select:focus { outline: none; border-color: var(--gold); }
+
+/* ---------- Modal ---------- */
+.modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+.modal-box { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 22px; width: 100%; max-width: 520px; max-height: 90vh; overflow: auto; }
+.modal-box h3 { margin-bottom: 14px; }
+
+/* ---------- Toast ---------- */
+#toast { position: fixed; top: 76px; right: 18px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: var(--panel-2); border: 1px solid var(--border); border-left: 3px solid var(--gold); padding: 10px 14px; border-radius: 8px; font-size: 13px; min-width: 180px; }
+.toast-error { border-left-color: var(--red); }
+.toast-success { border-left-color: #4ade80; }
+
+/* ---------- Footer ---------- */
+#site-footer { border-top: 1px solid var(--border); margin-top: auto; }
+.footer-inner { max-width: 1180px; margin: 0 auto; padding: 22px 20px; display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 13px; flex-wrap: wrap; }
+
+.empty { text-align: center; color: var(--muted); padding: 60px 0; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .hero { padding: 44px 20px; }
+  .hero-title { font-size: 28px; }
+  .nav-top { flex-wrap: wrap; }
+  .nav-links { order: 3; width: 100%; }
+  .row { flex-direction: column; gap: 0; }
+}
+
+</style>
+</head>
+<body>
+<header id="site-header"></header>
+<main id="app"></main>
+<footer id="site-footer"></footer>
+<div id="toast"></div>
+<script>
+
+/* ===== cloud.js ===== */
+// SIMDT store — site config (pure front-end, no backend / no secrets).
+//
+// This site is fully static: product catalog, cart, orders and sign-in all live
+// in the browser (localStorage). It can be hosted on ANY static host (your own
+// server, Vercel, Netlify, Cloudflare Pages, Aliyun OSS+CDN …) under your own
+// domain such as www.simdt.cn — there is no WorkBuddy cloud dependency and no
+// Origin restriction.
+
+// Admin emails that may access the management dashboard.
+// Change this to your real operator accounts before going live.
+const ADMIN_EMAILS = ['simdt@qq.com']
+
+// Payment provider keys. Leave empty to keep the method in "not connected" state.
+// Fill these after you obtain merchant accounts (Stripe / PayPal / WeChat / Alipay),
+// then wire the real redirect / checkout in pages.js (checkout()). The "demo" method
+// marks the order paid immediately for testing the flow without a real gateway.
+const PAYMENT_KEYS = {
+  stripe: '',
+  paypal: '',
+  wechat: '',
+  alipay: '',
+}
+
+// Optional: point orders at your own backend (e.g. a form endpoint, email API, or
+// Supabase). Leave empty to keep orders in the browser only. When set, checkout()
+// will POST the order JSON here after placing it.
+// Example: 'https://your-server.example.com/api/orders'
+const ORDER_WEBHOOK_URL = ''
+
+/* ===== supabase.js ===== */
+// SIMDT store — 轻量 Supabase 客户端（无 SDK 依赖，纯 fetch）
+//
+// 为什么不引入 @supabase/supabase-js：
+//   官方 SDK 打包后 100KB+，而站点是"单文件自包含"架构（CSS/JS 全内联）。
+//   这里只需 4 个能力：注册、密码登录、刷新令牌、PostgREST 增删改查，
+//   手写约 200 行即可，体积小、行为可控、也不会因 SDK 升级而失效。
+//
+// 安全说明：anon key 是「公开密钥」，设计上就要放在前端。真正的权限由
+//   Supabase 的行级安全策略（RLS）在数据库端强制，前端改不了。
+
+// ============ 配置（唯一需要你改的地方）============
+// 在 Supabase 控制台 → Project Settings → API 里复制：
+//   Project URL  -> 形如 https://abcdefghijklmn.supabase.co
+//   anon public  -> 一长串 eyJhbGciOi... 开头的 JWT
+const SUPABASE_URL = 'https://lmmmbvgqclporttdvukh.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxtbW1idmdxY2xwb3J0dGR2dWtoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyMTIyODIsImV4cCI6MjEwODc4ODI4Mn0.enUbaQecpd27Vhbzb-V0qFNHbWS0xxS62m4_dkx2hvQ'
+
+function isConfigured() {
+  return /^https?:\/\/.+/.test(SUPABASE_URL) && SUPABASE_ANON_KEY.length > 40
+}
+
+// ============ 会话存储 ============
+const SESSION_KEY = 'simdt_sb_session'
+
+function loadSession() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY)) || null } catch { return null }
+}
+
+function saveSession(s) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(s))
+}
+
+function clearSession() {
+  localStorage.removeItem(SESSION_KEY)
+}
+
+function sessionUser(s) {
+  if (!s || !s.user) return null
+  return { id: s.user.id, email: s.user.email, is_admin: !!s.is_admin }
+}
+
+// ============ 底层请求 ============
+function baseUrl() {
+  return SUPABASE_URL.replace(/\/+$/, '')
+}
+
+function parseError(status, payload) {
+  const msg =
+    payload?.msg || payload?.message || payload?.error_description ||
+    payload?.error || payload?.hint || `HTTP ${status}`
+  const err = new Error(msg)
+  err.status = status
+  err.payload = payload
+  return err
+}
+
+async function rawFetch(path, { method = 'GET', body, token, headers = {} } = {}) {
+  if (!isConfigured()) throw new Error('backend_not_configured')
+  const h = {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${token || SUPABASE_ANON_KEY}`,
+    'Content-Type': 'application/json',
+    ...headers,
+  }
+  const res = await fetch(baseUrl() + path, {
+    method,
+    headers: h,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+  const text = await res.text()
+  let data = null
+  if (text) { try { data = JSON.parse(text) } catch { data = text } }
+  if (!res.ok) throw parseError(res.status, data)
+  return data
+}
+
+// ============ 令牌刷新 ============
+let refreshing = null
+
+async function refreshSession(s) {
+  if (!s?.refresh_token) throw new Error('no_refresh_token')
+  const data = await rawFetch('/auth/v1/token?grant_type=refresh_token', {
+    method: 'POST',
+    body: { refresh_token: s.refresh_token },
+  })
+  const next = {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    expires_at: Date.now() + (data.expires_in || 3600) * 1000,
+    user: data.user,
+    is_admin: s.is_admin,
+  }
+  saveSession(next)
+  return next
+}
+
+// 取一个可用 token；快过期就先刷新（并发请求共用同一次刷新）
+async function validToken() {
+  const s = loadSession()
+  if (!s?.access_token) return null
+  if (s.expires_at && s.expires_at - Date.now() > 30000) return s.access_token
+  if (!refreshing) {
+    refreshing = refreshSession(s).finally(() => { refreshing = null })
+  }
+  try {
+    const next = await refreshing
+    return next.access_token
+  } catch {
+    clearSession()
+    return null
+  }
+}
+
+// 带自动重试的请求：遇到 401 刷新一次再试
+async function authedFetch(path, opts = {}) {
+  const token = await validToken()
+  try {
+    return await rawFetch(path, { ...opts, token })
+  } catch (e) {
+    if (e.status === 401 && token) {
+      const s = loadSession()
+      const next = await refreshSession(s)
+      return await rawFetch(path, { ...opts, token: next.access_token })
+    }
+    throw e
+  }
+}
+
+// ============ Auth ============
+function normalizeAuthError(e) {
+  const m = String(e.message || '')
+  if (/Invalid login credentials/i.test(m)) return new Error('wrong_credentials')
+  if (/already registered|already exists/i.test(m)) return new Error('email_registered')
+  if (/Password should be at least/i.test(m)) return new Error('password_too_short')
+  if (/Unable to validate email address/i.test(m)) return new Error('invalid_email')
+  if (/Email not confirmed/i.test(m)) return new Error('email_not_confirmed')
+  if (/backend_not_configured/.test(m)) return new Error('backend_not_configured')
+  return e
+}
+
+async function probeAdmin() {
+  try {
+    const r = await authedFetch('/rest/v1/rpc/is_admin', { method: 'POST', body: {} })
+    return r === true || r === 'true'
+  } catch { return false }
+}
+
+const auth = {
+  async signUp(email, password) {
+    let data
+    try {
+      data = await rawFetch('/auth/v1/signup', { method: 'POST', body: { email, password } })
+    } catch (e) { throw normalizeAuthError(e) }
+
+    // 项目开启「邮箱验证」时 signup 不返回 token，需要用户先去邮箱点确认
+    if (!data?.access_token) {
+      const err = new Error('confirm_email_sent')
+      err.needsConfirm = true
+      throw err
+    }
+    const session = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at: Date.now() + (data.expires_in || 3600) * 1000,
+      user: data.user,
+      is_admin: false,
+    }
+    saveSession(session)
+    session.is_admin = await probeAdmin()
+    saveSession(session)
+    window.dispatchEvent(new Event('auth-changed'))
+    return sessionUser(session)
+  },
+
+  async signIn(email, password) {
+    let data
+    try {
+      data = await rawFetch('/auth/v1/token?grant_type=password', {
+        method: 'POST',
+        body: { email, password },
+      })
+    } catch (e) { throw normalizeAuthError(e) }
+
+    const session = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at: Date.now() + (data.expires_in || 3600) * 1000,
+      user: data.user,
+      is_admin: false,
+    }
+    saveSession(session)
+    session.is_admin = await probeAdmin()
+    saveSession(session)
+    window.dispatchEvent(new Event('auth-changed'))
+    return sessionUser(session)
+  },
+
+  async signOut() {
+    const s = loadSession()
+    clearSession()
+    if (s?.access_token && isConfigured()) {
+      try { await rawFetch('/auth/v1/logout', { method: 'POST', token: s.access_token }) } catch { /* ignore */ }
+    }
+    window.dispatchEvent(new Event('auth-changed'))
+  },
+
+  getUser() {
+    return sessionUser(loadSession())
+  },
+
+  // 页面加载时恢复会话：token 过期会自动刷新
+  async restore() {
+    const s = loadSession()
+    if (!s?.refresh_token) return null
+    try {
+      const token = await validToken()
+      if (!token) return null
+      const fresh = loadSession()
+      if (fresh && fresh.is_admin === undefined) {
+        fresh.is_admin = await probeAdmin()
+        saveSession(fresh)
+      }
+      return sessionUser(loadSession())
+    } catch {
+      clearSession()
+      return null
+    }
+  },
+}
+
+// ============ PostgREST ============
+// query 直接用 PostgREST 语法，例如 'status=eq.published&order=sort_order.asc'
+const db = {
+  async select(table, query = '') {
+    const q = query ? `?${query}` : ''
+    return await authedFetch(`/rest/v1/${table}${q}`)
+  },
+
+  // opts.returning = false 时不要求数据库回传整行（return=minimal）。
+  // 游客下单必须用这个：anon 对 orders 没有 SELECT 策略，
+  // 一旦要 representation，PostgREST 会因无权 RETURNING 而整条插入失败。
+  async insert(table, row, opts = {}) {
+    const returning = opts.returning !== false
+    const data = await authedFetch(`/rest/v1/${table}`, {
+      method: 'POST',
+      body: row,
+      headers: { Prefer: returning ? 'return=representation' : 'return=minimal' },
+    })
+    return Array.isArray(data) ? data[0] : data
+  },
+
+  // 插入多行
+  async insertMany(table, rows) {
+    return await authedFetch(`/rest/v1/${table}`, {
+      method: 'POST',
+      body: rows,
+      headers: { Prefer: 'return=representation' },
+    })
+  },
+
+  // match 形如 'id=eq.3'
+  async update(table, patch, match) {
+    const data = await authedFetch(`/rest/v1/${table}?${match}`, {
+      method: 'PATCH',
+      body: patch,
+      headers: { Prefer: 'return=representation' },
+    })
+    return Array.isArray(data) ? data[0] : data
+  },
+
+  async remove(table, match) {
+    return await authedFetch(`/rest/v1/${table}?${match}`, { method: 'DELETE' })
+  },
+
+  async rpc(fn, args = {}) {
+    return await authedFetch(`/rest/v1/rpc/${fn}`, { method: 'POST', body: args })
+  },
+}
+
+/* ===== i18n.js ===== */
+// SIMDT store — i18n (zh/en) + currency
+const dict = {
+  zh: {
+    nav_home: '首页', nav_products: '产品', nav_cart: '购物车', nav_orders: '我的订单',
+    nav_admin: '后台', nav_login: '登录', nav_logout: '退出',
+    brand: 'SIMDT',
+    home_hero_title: 'SIMDT 模拟赛车硬件',
+    home_hero_sub: '为严肃玩家打造的高保真方向盘、仪表盘与力反馈系统',
+    home_shop_btn: '去选购',
+    home_featured: '精选产品',
+    home_categories: '产品分类',
+    products_title: '全部产品',
+    products_empty: '暂无产品',
+    add_to_cart: '加入购物车',
+    out_of_stock: '缺货',
+    details: '详情',
+    back: '返回',
+    category_all: '全部',
+    cat_dashboard: '仪表盘',
+    cat_wheel: '方向盘',
+    cat_haptic: '触觉马达',
+    cat_buttonbox: '按钮盒',
+    cat_wind: '风力模拟',
+    cat_shifter: '档位显示',
+    price_request: '询价',
+    inquire_cta: '联系询价',
+    inquire_subject: 'SIMDT 产品询价',
+    specs: '规格',
+    qty: '数量',
+    description: '描述',
+    price: '价格',
+    stock: '库存',
+    buy_now: '立即购买',
+    cart_title: '购物车',
+    cart_empty: '购物车为空',
+    cart_subtotal: '小计',
+    cart_checkout: '去结算',
+    cart_remove: '移除',
+    cart_continue: '继续购物',
+    checkout_title: '结算',
+    checkout_login_required: '请先登录以完成下单',
+    checkout_shipping: '收货信息',
+    name: '姓名',
+    email: '邮箱',
+    phone: '电话',
+    address: '地址',
+    payment: '支付方式',
+    pay_demo: '演示支付（测试）',
+    pay_stripe: 'Stripe 信用卡',
+    pay_paypal: 'PayPal',
+    pay_wechat: '微信支付',
+    pay_alipay: '支付宝',
+    pay_not_ready: '该支付方式待接入，请在后台配置商户密钥',
+    place_order: '提交订单',
+    order_success: '下单成功',
+    order_no: '订单号',
+    order_paid: '已支付',
+    order_pending: '待支付',
+    orders_title: '我的订单',
+    orders_empty: '暂无订单',
+    order_items: '商品',
+    order_total: '合计',
+    order_status: '状态',
+    status_pending: '待支付',
+    status_paid: '已支付',
+    status_shipped: '已发货',
+    status_cancelled: '已取消',
+    status_failed: '支付失败',
+    login_title: '登录',
+    login_register_title: '注册账号',
+    login_email: '邮箱',
+    login_password: '密码',
+    login_password_hint: '至少 6 位字符',
+    login_submit: '登录',
+    login_register_submit: '注册并登录',
+    login_hint: '登录后可查看订单历史、保存收货信息',
+    login_no_account: '还没有账号？',
+    login_have_account: '已有账号？',
+    login_to_register: '立即注册',
+    login_to_signin: '去登录',
+    err_wrong_credentials: '邮箱或密码错误',
+    err_email_registered: '该邮箱已注册，请直接登录',
+    err_password_too_short: '密码至少 6 位',
+    err_invalid_email: '邮箱格式不正确',
+    err_email_not_confirmed: '邮箱还未验证，请先去邮箱点确认链接',
+    err_confirm_email_sent: '注册成功，请去邮箱点确认链接后再登录',
+    backend_not_configured: '后台未配置：请在 js/supabase.js 填入 Supabase 地址与密钥',
+    backend_error: '服务器请求失败，请稍后重试',
+    order_guest_hint: '订单已提交，订单号',
+    order_guest_save: '请保存订单号。注册登录后可随时查看订单状态。',
+    admin_title: '管理后台',
+    admin_products: '商品管理',
+    admin_orders: '订单管理',
+    admin_new_product: '新建商品',
+    admin_edit: '编辑',
+    admin_delete: '删除',
+    admin_save: '保存',
+    admin_cancel: '取消',
+    admin_field_name_en: '英文名',
+    admin_field_name_zh: '中文名',
+    admin_field_category: '分类',
+    admin_field_price_usd: '美元价',
+    admin_field_price_cny: '人民币价',
+    admin_field_stock: '库存',
+    admin_field_status: '状态',
+    admin_field_image: '图片URL',
+    admin_field_desc_en: '英文描述',
+    admin_field_desc_zh: '中文描述',
+    admin_field_featured: '精选',
+    admin_order_update: '更新状态',
+    admin_confirm_delete: '确认删除该商品？',
+    status_published: '已上架',
+    status_draft: '草稿',
+    status_archived: '已下架',
+    admin_field_subtitle_en: '英文副标题',
+    admin_field_subtitle_zh: '中文副标题',
+    admin_field_specs_en: '英文规格（逗号分隔）',
+    admin_field_specs_zh: '中文规格（逗号分隔）',
+    admin_publish: '上架',
+    admin_unpublish: '下架',
+    admin_orders_empty: '暂无订单',
+    admin_customer: '客户',
+    admin_no_backend: '尚未连接数据库，请先按 SUPABASE_SETUP.md 完成配置',
+    loading: '加载中…',
+    error: '出错了',
+    saved: '已保存',
+    required: '必填',
+    cart_count: '购物车',
+    not_admin: '你没有后台访问权限',
+    fill_required: '请填写必填项',
+    confirm_logout: '确认退出登录？',
+  },
+  en: {
+    nav_home: 'Home', nav_products: 'Products', nav_cart: 'Cart', nav_orders: 'My Orders',
+    nav_admin: 'Admin', nav_login: 'Sign In', nav_logout: 'Sign Out',
+    brand: 'SIMDT',
+    home_hero_title: 'SIMDT Sim Racing Gear',
+    home_hero_sub: 'High-fidelity wheels, dashboards and force-feedback for serious sim racers',
+    home_shop_btn: 'Shop Now',
+    home_featured: 'Featured',
+    home_categories: 'Categories',
+    products_title: 'All Products',
+    products_empty: 'No products yet',
+    add_to_cart: 'Add to Cart',
+    out_of_stock: 'Out of stock',
+    details: 'Details',
+    back: 'Back',
+    category_all: 'All',
+    cat_dashboard: 'Dashboard',
+    cat_wheel: 'Steering Wheel',
+    cat_haptic: 'Haptic Motor',
+    cat_buttonbox: 'Button Box',
+    cat_wind: 'Wind Sim',
+    cat_shifter: 'Gear Display',
+    price_request: 'Contact for Price',
+    inquire_cta: 'Inquire',
+    inquire_subject: 'SIMDT product inquiry',
+    specs: 'Specs',
+    qty: 'Qty',
+    description: 'Description',
+    price: 'Price',
+    stock: 'Stock',
+    buy_now: 'Buy Now',
+    cart_title: 'Cart',
+    cart_empty: 'Cart is empty',
+    cart_subtotal: 'Subtotal',
+    cart_checkout: 'Checkout',
+    cart_remove: 'Remove',
+    cart_continue: 'Continue Shopping',
+    checkout_title: 'Checkout',
+    checkout_login_required: 'Please sign in to place your order',
+    checkout_shipping: 'Shipping Info',
+    name: 'Name',
+    email: 'Email',
+    phone: 'Phone',
+    address: 'Address',
+    payment: 'Payment',
+    pay_demo: 'Demo Pay (test)',
+    pay_stripe: 'Stripe Card',
+    pay_paypal: 'PayPal',
+    pay_wechat: 'WeChat Pay',
+    pay_alipay: 'Alipay',
+    pay_not_ready: 'This method is not connected yet — configure merchant keys in admin',
+    place_order: 'Place Order',
+    order_success: 'Order placed',
+    order_no: 'Order No.',
+    order_paid: 'Paid',
+    order_pending: 'Pending',
+    orders_title: 'My Orders',
+    orders_empty: 'No orders',
+    order_items: 'Items',
+    order_total: 'Total',
+    order_status: 'Status',
+    status_pending: 'Pending',
+    status_paid: 'Paid',
+    status_shipped: 'Shipped',
+    status_cancelled: 'Cancelled',
+    status_failed: 'Failed',
+    login_title: 'Sign In',
+    login_register_title: 'Create Account',
+    login_email: 'Email',
+    login_password: 'Password',
+    login_password_hint: 'At least 6 characters',
+    login_submit: 'Sign In',
+    login_register_submit: 'Sign Up & Sign In',
+    login_hint: 'Sign in to view order history and save shipping details',
+    login_no_account: 'No account yet?',
+    login_have_account: 'Already have an account?',
+    login_to_register: 'Create one',
+    login_to_signin: 'Sign in',
+    err_wrong_credentials: 'Wrong email or password',
+    err_email_registered: 'This email is already registered, please sign in',
+    err_password_too_short: 'Password must be at least 6 characters',
+    err_invalid_email: 'Invalid email address',
+    err_email_not_confirmed: 'Email not confirmed yet, check your inbox',
+    err_confirm_email_sent: 'Registered. Confirm your email, then sign in',
+    backend_not_configured: 'Backend not configured: fill Supabase URL and key in js/supabase.js',
+    backend_error: 'Server request failed, please retry',
+    order_guest_hint: 'Order submitted. Order number',
+    order_guest_save: 'Save this order number. Sign in to track your orders anytime.',
+    admin_title: 'Admin',
+    admin_products: 'Products',
+    admin_orders: 'Orders',
+    admin_new_product: 'New Product',
+    admin_edit: 'Edit',
+    admin_delete: 'Delete',
+    admin_save: 'Save',
+    admin_cancel: 'Cancel',
+    admin_field_name_en: 'Name (EN)',
+    admin_field_name_zh: 'Name (ZH)',
+    admin_field_category: 'Category',
+    admin_field_price_usd: 'Price (USD)',
+    admin_field_price_cny: 'Price (CNY)',
+    admin_field_stock: 'Stock',
+    admin_field_status: 'Status',
+    admin_field_image: 'Image URL',
+    admin_field_desc_en: 'Desc (EN)',
+    admin_field_desc_zh: 'Desc (ZH)',
+    admin_field_featured: 'Featured',
+    admin_order_update: 'Update Status',
+    admin_confirm_delete: 'Delete this product?',
+    status_published: 'Published',
+    status_draft: 'Draft',
+    status_archived: 'Archived',
+    admin_field_subtitle_en: 'Subtitle (EN)',
+    admin_field_subtitle_zh: 'Subtitle (ZH)',
+    admin_field_specs_en: 'Specs (EN, comma separated)',
+    admin_field_specs_zh: 'Specs (ZH, comma separated)',
+    admin_publish: 'Publish',
+    admin_unpublish: 'Unpublish',
+    admin_orders_empty: 'No orders yet',
+    admin_customer: 'Customer',
+    admin_no_backend: 'Database not connected. Complete SUPABASE_SETUP.md first',
+    loading: 'Loading…',
+    error: 'Something went wrong',
+    saved: 'Saved',
+    required: 'Required',
+    cart_count: 'Cart',
+    not_admin: 'You do not have admin access',
+    fill_required: 'Please fill required fields',
+    confirm_logout: 'Sign out?',
+  },
+}
+
+let lang = localStorage.getItem('simdt_lang') || 'zh'
+let currency = localStorage.getItem('simdt_currency') || (lang === 'zh' ? 'CNY' : 'USD')
+
+function getLang() { return lang }
+function setLang(l) { lang = l; localStorage.setItem('simdt_lang', l) }
+function getCurrency() { return currency }
+function setCurrency(c) { currency = c; localStorage.setItem('simdt_currency', c) }
+
+function t(key) {
+  return (dict[lang] && dict[lang][key]) || dict.en[key] || key
+}
+
+function money(amount) {
+  const sym = currency === 'CNY' ? '¥' : '$'
+  return sym + Number(amount || 0).toFixed(2)
+}
+
+// 美元价 / 人民币价 只填一个时按此汇率互相折算（后台可分别填两个价覆盖）
+const USD_CNY = 7.2
+
+function productPrice(p) {
+  const usd = Number(p.price_usd || 0)
+  const cny = Number(p.price_cny || 0)
+  if (currency === 'CNY') {
+    if (cny > 0) return cny
+    return usd > 0 ? Math.round(usd * USD_CNY) : 0
+  }
+  if (usd > 0) return usd
+  return cny > 0 ? Math.round((cny / USD_CNY) * 100) / 100 : 0
+}
+
+// 价格为 0 视为未定价 → 显示「询价」
+function isInquiry(p) {
+  return !(Number(productPrice(p)) > 0)
+}
+
+function priceText(p) {
+  return isInquiry(p) ? t('price_request') : money(productPrice(p))
+}
+
+/* ===== cart.js ===== */
+// SIMDT store — shopping cart (localStorage, guest-friendly)
+
+
+const KEY = 'simdt_cart'
+
+function read() {
+  try { return JSON.parse(localStorage.getItem(KEY)) || [] } catch { return [] }
+}
+function write(items) {
+  localStorage.setItem(KEY, JSON.stringify(items))
+  window.dispatchEvent(new Event('cart-updated'))
+}
+
+function getCart() { return read() }
+function cartCount() { return read().reduce((s, i) => s + i.qty, 0) }
+
+function addToCart(product, qty = 1) {
+  const items = read()
+  const ex = items.find(i => i.id === product.id)
+  if (ex) ex.qty += qty
+  else items.push({
+    id: product.id,
+    qty,
+    name_en: product.name_en,
+    name_zh: product.name_zh,
+    price_usd: product.price_usd,
+    price_cny: product.price_cny,
+    image_url: product.image_url,
+    stock: product.stock,
+  })
+  write(items)
+}
+
+function updateQty(id, qty) {
+  const items = read()
+  const it = items.find(i => i.id === id)
+  if (it) { it.qty = Math.max(1, qty | 0); write(items) }
+}
+
+function removeFromCart(id) {
+  write(read().filter(i => i.id !== id))
+}
+
+function clearCart() { write([]) }
+
+function cartSubtotal() {
+  // 走 productPrice 而不是裸 price_cny/price_usd：
+  // 后台只填一种币种时按汇率折算出另一种，否则另一种币种下合计会是 0。
+  return read().reduce((s, i) => s + i.qty * Number(productPrice(i) || 0), 0)
+}
+
+/* ===== products.js ===== */
+// SIMDT 商店 — 内置商品目录（与品牌站 9 款真实 SKU 一致，本地数据、无后端）
+// 由 gen-products.js 从品牌站 i18n 自动生成，改文案请改品牌站或此文件后重跑 build.js
+// price_usd / price_cny 为 0 时，前台显示「询价」，加入购物车按钮替换为联系询价。
+const PRODUCTS = [
+  {
+    id: 1,
+    slug: 'haptic-feedback-motor',
+    name_en: 'Haptic Feedback Motor',
+    name_zh: '触觉反馈马达',
+    subtitle_en: 'SimHub Compatible',
+    subtitle_zh: 'SimHub 兼容',
+    category: 'haptic',
+    price_usd: 0,          // 0 = 询价（后台填价后自动变为正常售卖）
+    price_cny: 0,
+    image_url: '../images/product-haptic.jpg',
+    gallery: [],
+    description_en: 'High-torque haptic motor that recreates road texture, engine vibration, gear shifts, and ABS feedback. Mounts directly to pedals, seat, or wheel base for full-body immersion.',
+    description_zh: '高扭矩触觉马达，模拟路面纹理、引擎振动、换挡顿挫和 ABS 反馈。可直接安装在踏板、座椅或方向盘底座上，实现全身沉浸感。',
+    specs_en: ['USB Plug & Play', 'SimHub DSP'],
+    specs_zh: ['USB 即插即用', 'SimHub DSP'],
+    stock: 60,
+    status: 'published',
+    featured: true,
+  },
+  {
+    id: 2,
+    slug: 'wind-simulation-system',
+    name_en: 'Wind Simulation System',
+    name_zh: '风力模拟系统',
+    subtitle_en: 'Dynamic Speed Sync',
+    subtitle_zh: '动态速度同步',
+    category: 'wind',
+    price_usd: 0,          // 0 = 询价（后台填价后自动变为正常售卖）
+    price_cny: 0,
+    image_url: '../images/product-wind.jpg',
+    gallery: [],
+    description_en: 'Dual-fan wind system that dynamically adjusts airflow based on in-game speed. Feel the rush of wind increase as you accelerate down the straight.',
+    description_zh: '双风扇风力系统，根据游戏内车速动态调节风速。在大直道加速时，感受迎面而来的劲风。',
+    specs_en: ['Dual 120mm Fans', 'PWM Speed Control'],
+    specs_zh: ['双 120mm 风扇', 'PWM 调速'],
+    stock: 40,
+    status: 'published',
+    featured: true,
+  },
+  {
+    id: 3,
+    slug: 'gt-steering-wheel',
+    name_en: 'GT Style Steering Wheel',
+    name_zh: 'GT 风格方向盘',
+    subtitle_en: 'Leather & Carbon Fiber',
+    subtitle_zh: '真皮 + 碳纤维',
+    category: 'wheel',
+    price_usd: 0,          // 0 = 询价（后台填价后自动变为正常售卖）
+    price_cny: 0,
+    image_url: '../images/product-wheel.jpg',
+    gallery: [],
+    description_en: 'Full-sized GT racing wheel with genuine leather grips, carbon fiber plate, magnetic paddle shifters, and a 5-inch touchscreen dashboard built right in.',
+    description_zh: '全尺寸 GT 赛车方向盘，真皮握把、碳纤维面板、磁性拨片换挡，内置 5 英寸触摸屏仪表盘。',
+    specs_en: ['330mm Diameter', 'Magnetic Shifters'],
+    specs_zh: ['330mm 直径', '磁性拨片'],
+    stock: 25,
+    status: 'published',
+    featured: true,
+  },
+  {
+    id: 4,
+    slug: 'button-box-panel',
+    name_en: 'Button Box Panel',
+    name_zh: '按钮盒面板',
+    subtitle_en: '12 Programmable Buttons',
+    subtitle_zh: '12 个可编程按键',
+    category: 'buttonbox',
+    price_usd: 0,          // 0 = 询价（后台填价后自动变为正常售卖）
+    price_cny: 0,
+    image_url: '../images/product-buttonbox.jpg',
+    gallery: [],
+    description_en: 'Compact button box with rotary encoders, toggle switches, and push buttons. Map any in-game function — pit limiter, TC, ABS, brake bias, and more.',
+    description_zh: '紧凑型按钮盒，配备旋转编码器、拨动开关和按键。可映射任意游戏功能——限速器、TC、ABS、刹车比等。',
+    specs_en: ['12 Buttons', '3 Rotary Encoders'],
+    specs_zh: ['12 个按键', '3 个旋钮编码器'],
+    stock: 80,
+    status: 'published',
+    featured: false,
+  },
+  {
+    id: 5,
+    slug: 'touchscreen-dashboard-5',
+    name_en: '5" Touchscreen Dashboard',
+    name_zh: '5寸触摸屏仪表盘',
+    subtitle_en: 'SimHub Dashboard Ready',
+    subtitle_zh: 'SimHub 仪表盘就绪',
+    category: 'dashboard',
+    price_usd: 0,          // 0 = 询价（后台填价后自动变为正常售卖）
+    price_cny: 0,
+    image_url: '../images/product-dashboard.jpg',
+    gallery: [],
+    description_en: 'High-brightness 5-inch IPS touchscreen dash. Run custom SimHub dashboards, display telemetry data, and control settings with a tap.',
+    description_zh: '高亮度 5 英寸 IPS 触摸屏仪表盘。运行自定义 SimHub 仪表盘，显示遥测数据，触控操作各项设置。',
+    specs_en: ['5" IPS 800x480', 'Touchscreen'],
+    specs_zh: ['5寸 IPS 800x480', '触摸屏'],
+    stock: 50,
+    status: 'published',
+    featured: true,
+  },
+  {
+    id: 6,
+    slug: 'st-haptic-motor',
+    name_en: 'ST Haptic Vibration Motor',
+    name_zh: 'ST 体感震动马达',
+    subtitle_en: 'ST Series \\u00b7 SimHub DSP',
+    subtitle_zh: 'ST 系列 · SimHub DSP',
+    category: 'haptic',
+    price_usd: 0,          // 0 = 询价（后台填价后自动变为正常售卖）
+    price_cny: 0,
+    image_url: '../images/product-stmotor.jpg',
+    gallery: [],
+    description_en: 'Compact high-torque haptic vibration unit for pedals, seat, and wheel base. Recreates road bumps, engine rumble, ABS pulse, and gear shift feedback with stunning realism.',
+    description_zh: '紧凑型高扭矩体感震动单元，适用于踏板、座椅和方向盘底座。真实还原路面颠簸、引擎轰鸣、ABS 脉冲和换挡反馈。',
+    specs_en: ['USB Plug & Play', 'SimHub DSP Effects'],
+    specs_zh: ['USB 即插即用', 'SimHub DSP 特效'],
+    stock: 60,
+    status: 'published',
+    featured: false,
+  },
+  {
+    id: 7,
+    slug: 'gt2-steering-wheel',
+    name_en: 'GT2 Racing Steering Wheel',
+    name_zh: 'GT2 赛车方向盘',
+    subtitle_en: '330mm \\u00b7 Suede Grip',
+    subtitle_zh: '330mm · 翻毛皮握把',
+    category: 'wheel',
+    price_usd: 0,          // 0 = 询价（后台填价后自动变为正常售卖）
+    price_cny: 0,
+    image_url: '../images/product-gt2.jpg',
+    gallery: [],
+    description_en: 'Purpose-built GT racing wheel with premium suede leather grips, carbon fiber faceplate, magnetic paddle shifters, and full SimHub compatibility.',
+    description_zh: '专为 GT 赛车打造的方向盘，采用高级翻毛皮握把、碳纤维面板、磁性拨片换挡，全面兼容 SimHub。',
+    specs_en: ['330mm Diameter', 'Suede Leather Grip'],
+    specs_zh: ['330mm 直径', '翻毛皮握把'],
+    stock: 20,
+    status: 'published',
+    featured: true,
+  },
+  {
+    id: 8,
+    slug: 'g2-gear-indicator',
+    name_en: 'G2 Gear Indicator Display',
+    name_zh: 'G2 档位显示器',
+    subtitle_en: 'LED Gear Display',
+    subtitle_zh: 'LED 档位显示',
+    category: 'shifter',
+    price_usd: 0,          // 0 = 询价（后台填价后自动变为正常售卖）
+    price_cny: 0,
+    image_url: '../images/product-g2gear.jpg',
+    gallery: [],
+    description_en: 'Bright LED gear position indicator with customizable display modes. Mounts easily to any wheel base. Real-time gear readout compatible with all major sim titles.',
+    description_zh: '高亮 LED 档位指示器，支持多种显示模式。兼容所有主流模拟赛车游戏，实时档位读数一目了然。',
+    specs_en: ['LED Digital Display', 'Customizable Modes'],
+    specs_zh: ['LED 数字显示', '多模式切换'],
+    stock: 70,
+    status: 'published',
+    featured: false,
+  },
+  {
+    id: 9,
+    slug: 'dt7-pro-dashboard',
+    name_en: 'DT7 Pro Smart Dashboard',
+    name_zh: 'DT7 Pro 智能仪表盘',
+    subtitle_en: '7" HD Touch \\u00b7 Data Hub',
+    subtitle_zh: '7寸高清触控 · 数据中心',
+    category: 'dashboard',
+    price_usd: 0,          // 0 = 询价（后台填价后自动变为正常售卖）
+    price_cny: 0,
+    image_url: '../images/product-dt7pro.jpg',
+    gallery: [],
+    description_en: 'Flagship 7-inch HD touchscreen dashboard with advanced telemetry, lap timing, fuel management, and fully customizable SimHub dash layouts. The ultimate race data center.',
+    description_zh: '旗舰级 7 寸高清触摸仪表盘，支持高级遥测、圈速计时、油耗管理，可完全自定义 SimHub 仪表布局，终极赛车数据中心。',
+    specs_en: ['7" HD Touchscreen', 'Full Telemetry Suite'],
+    specs_zh: ['7寸 高清触摸屏', '完整遥测套件'],
+    stock: 30,
+    status: 'published',
+    featured: true,
+  },
+]
+
+/* ===== api.js ===== */
+// SIMDT store — 数据层（Supabase 真后端）
+//
+// 所有商品与订单都存在 Supabase 数据库里，任何设备、任何访客看到的都是同一份数据。
+// 未配置后端时（js/supabase.js 里的 URL/KEY 为空）自动降级为内置目录只读展示，
+// 这样你可以先预览页面、配好密钥后自动切到真数据。
+
+
+
+
+const NO_BACKEND = 'backend_not_configured'
+
+function ensureBackend() {
+  if (!isConfigured()) throw new Error(NO_BACKEND)
+}
+
+// ---------------- 商品 ----------------
+
+async function listProducts({ category, featured } = {}) {
+  if (!isConfigured()) {
+    let items = PRODUCTS.filter(p => (p.status || 'published') === 'published')
+    if (category && category !== 'all') items = items.filter(p => p.category === category)
+    if (featured) items = items.filter(p => p.featured)
+    return items
+  }
+  let q = 'select=*&status=eq.published&order=sort_order.asc,id.asc'
+  if (category && category !== 'all') q += `&category=eq.${encodeURIComponent(category)}`
+  if (featured) q += '&featured=is.true'
+  return await db.select('products', q)
+}
+
+async function getProduct(id) {
+  if (!isConfigured()) return PRODUCTS.find(p => String(p.id) === String(id)) || null
+  const rows = await db.select('products', `select=*&id=eq.${encodeURIComponent(id)}&limit=1`)
+  return rows[0] || null
+}
+
+// 后台用：全部商品（含草稿、下架）
+async function listAllProducts() {
+  if (!isConfigured()) return PRODUCTS
+  return await db.select('products', 'select=*&order=sort_order.asc,id.asc')
+}
+
+function slugify(s) {
+  return String(s || 'item')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'item'
+}
+
+// 有 id 视为编辑，无 id 视为新增
+async function saveProduct(p) {
+  ensureBackend()
+  const payload = {
+    name_en: p.name_en,
+    name_zh: p.name_zh,
+    subtitle_en: p.subtitle_en || null,
+    subtitle_zh: p.subtitle_zh || null,
+    description_en: p.description_en || null,
+    description_zh: p.description_zh || null,
+    specs_en: p.specs_en || [],
+    specs_zh: p.specs_zh || [],
+    category: p.category || 'general',
+    price_usd: Number(p.price_usd || 0),
+    price_cny: Number(p.price_cny || 0),
+    stock: parseInt(p.stock || 0, 10),
+    image_url: p.image_url || null,
+    status: p.status || 'published',
+    featured: !!p.featured,
+    updated_at: new Date().toISOString(),
+  }
+  if (p.id) {
+    return await db.update('products', payload, `id=eq.${encodeURIComponent(p.id)}`)
+  }
+  payload.slug = p.slug || slugify(p.name_en) + '-' + Date.now().toString(36).slice(-4)
+  payload.sort_order = Number(p.sort_order || 999)
+  return await db.insert('products', payload)
+}
+
+async function deleteProduct(id) {
+  ensureBackend()
+  return await db.remove('products', `id=eq.${encodeURIComponent(id)}`)
+}
+
+// 只改上下架状态，不动其他字段（saveProduct 会整行覆盖，别拿来干这个）
+async function updateProductStatus(id, status) {
+  ensureBackend()
+  return await db.update('products',
+    { status, updated_at: new Date().toISOString() },
+    `id=eq.${encodeURIComponent(id)}`)
+}
+
+// ---------------- 订单 ----------------
+
+async function createOrder(order) {
+  ensureBackend()
+  const u = getUser()
+  const payload = {
+    order_no: order.order_no,
+    user_id: u ? u.id : null,
+    customer_email: order.customer_email,
+    items: order.items,
+    currency: order.currency,
+    subtotal: Number(order.subtotal || 0),
+    shipping_fee: Number(order.shipping_fee || 0),
+    total: Number(order.total || 0),
+    status: order.status || 'pending',
+    payment_method: order.payment_method || null,
+    shipping_name: order.shipping_name || null,
+    shipping_phone: order.shipping_phone || null,
+    shipping_address: order.shipping_address || null,
+    note: order.note || null,
+  }
+  // 登录用户能读回自己这单（orders_read_own 策略放行 RETURNING）；
+  // 游客没有订单读取权限，必须走 minimal，否则整条插入会被拒。
+  return await db.insert('orders', payload, { returning: !!u })
+}
+
+async function listMyOrders() {
+  ensureBackend()
+  const u = getUser()
+  if (!u) return []
+  return await db.select('orders', `select=*&user_id=eq.${u.id}&order=created_at.desc&limit=100`)
+}
+
+async function listAllOrdersAdmin() {
+  ensureBackend()
+  return await db.select('orders', 'select=*&order=created_at.desc&limit=300')
+}
+
+async function updateOrderStatusAdmin(id, status) {
+  ensureBackend()
+  const patch = { status, updated_at: new Date().toISOString() }
+  if (status === 'paid') patch.paid_at = new Date().toISOString()
+  return await db.update('orders', patch, `id=eq.${encodeURIComponent(id)}`)
+}
+
+async function markOrderPaid(id) {
+  return await updateOrderStatusAdmin(id, 'paid')
+}
+
+/* ===== auth.js ===== */
+// SIMDT store — 登录层（Supabase Auth，邮箱 + 密码）
+//
+// 真登录：密码由 Supabase 校验，Token 是签名的 JWT，前端伪造不了。
+// isAdmin() 只用来决定「要不要显示后台入口」，真正的写权限由数据库端
+// 的 RLS 策略强制（见 supabase/schema.sql）。即便有人改了前端代码，
+// 也写不进商品表。
+
+
+
+function isBackendReady() {
+  return isConfigured()
+}
+
+function onAuthChange(cb) {
+  const handler = () => cb(auth.getUser())
+  window.addEventListener('auth-changed', handler)
+  window.addEventListener('storage', handler)
+  return () => {
+    window.removeEventListener('auth-changed', handler)
+    window.removeEventListener('storage', handler)
+  }
+}
+
+// 恢复会话（token 过期会自动刷新），失败返回 { user: null }
+async function getSession() {
+  if (!isConfigured()) return { user: null }
+  if (!loadSession()?.refresh_token) return { user: null }
+  const user = await auth.restore()
+  return { user }
+}
+
+function getUser() {
+  return auth.getUser()
+}
+
+async function signIn(email, password) {
+  return await auth.signIn(email.trim().toLowerCase(), password)
+}
+
+async function signUp(email, password) {
+  return await auth.signUp(email.trim().toLowerCase(), password)
+}
+
+async function signOut() {
+  return await auth.signOut()
+}
+
+// 后端判定优先；本地白名单只作为「入口显示」的兜底（后端不可用时也能进页面）
+function isAdmin(user) {
+  if (!user) return false
+  if (user.is_admin === true) return true
+  return ADMIN_EMAILS.map(e => e.toLowerCase()).includes((user.email || '').toLowerCase())
+}
+
+/* ===== ui.js ===== */
+// SIMDT store — shared UI (header, footer, toast)
+
+
+
+
+function toast(msg, type = 'info') {
+  const el = document.getElementById('toast')
+  if (!el) return
+  const div = document.createElement('div')
+  div.className = 'toast toast-' + type
+  div.textContent = msg
+  el.appendChild(div)
+  setTimeout(() => div.remove(), 3200)
+}
+
+function renderHeader(user) {
+  const lang = getLang()
+  const cur = getCurrency()
+  const adminLink = user && isAdmin(user)
+    ? `<a href="#/admin" class="nav-link nav-admin">${t('nav_admin')}</a>` : ''
+  const authLink = user
+    ? `<a href="#/orders" class="nav-link">${t('nav_orders')}</a>
+       <span class="nav-user" title="${user.email}">${user.email}</span>
+       <a href="#" class="nav-link" data-action="logout">${t('nav_logout')}</a>`
+    : `<a href="#/login" class="nav-link">${t('nav_login')}</a>`
+  return `
+  <div class="nav-top">
+    <a href="#/" class="brand">SIMDT</a>
+    <nav class="nav-links">
+      <a href="#/" class="nav-link">${t('nav_home')}</a>
+      <a href="#/products" class="nav-link">${t('nav_products')}</a>
+      <a href="#/cart" class="nav-link">${t('nav_cart')} <span class="badge" id="cart-badge">${cartCount()}</span></a>
+      ${authLink}
+      ${adminLink}
+    </nav>
+    <div class="nav-tools">
+      <button class="tool-btn" data-action="lang" title="Language">${lang === 'zh' ? 'EN' : '中'}</button>
+      <button class="tool-btn" data-action="currency" title="Currency">${cur === 'CNY' ? '$' : '¥'}</button>
+    </div>
+  </div>`
+}
+
+function footerHTML() {
+  return `<div class="footer-inner">
+    <span>SIMDT · ${t('home_hero_sub')}</span>
+    <span>© 2026 SIMDT. ${t('brand')} Sim Racing.</span>
+  </div>`
+}
+
+function productImage(url) {
+  return url || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect width='100%25' height='100%25' fill='%23141414'/%3E%3Ctext x='50%25' y='50%25' fill='%239a9a9a' font-family='sans-serif' font-size='20' text-anchor='middle' dominant-baseline='middle'%3ESIMDT%3C/text%3E%3C/svg%3E"
+}
+
+function statusLabel(s) {
+  return ({
+    pending: t('status_pending'),
+    paid: t('status_paid'),
+    shipped: t('status_shipped'),
+    cancelled: t('status_cancelled'),
+    failed: t('status_failed'),
+  })[s] || s
+}
+
+/* ===== pages.js ===== */
+// SIMDT store — page renderers
+
+
+
+
+
+
+
+// 把后端错误码翻译成用户能看懂的话
+function errText(e) {
+  const map = {
+    wrong_credentials: t('err_wrong_credentials'),
+    email_registered: t('err_email_registered'),
+    password_too_short: t('err_password_too_short'),
+    invalid_email: t('err_invalid_email'),
+    email_not_confirmed: t('err_email_not_confirmed'),
+    confirm_email_sent: t('err_confirm_email_sent'),
+    backend_not_configured: t('backend_not_configured'),
+  }
+  const key = e && e.message
+  return (key && map[key]) || t('backend_error')
+}
+
+const CATEGORIES = ['all', 'dashboard', 'wheel', 'haptic', 'buttonbox', 'wind', 'shifter']
+function catLabel(c) {
+  if (c === 'all') return t('category_all')
+  const label = t('cat_' + c)
+  return label === 'cat_' + c ? c : label
+}
+
+const INQUIRY_MAIL = 'simdt@qq.com'
+function inquiryHref(p) {
+  const name = getLang() === 'zh' ? p.name_zh : p.name_en
+  return `mailto:${INQUIRY_MAIL}?subject=${encodeURIComponent(t('inquire_subject') + ' - ' + name)}`
+}
+
+function productCardHTML(p) {
+  const name = getLang() === 'zh' ? `${p.name_zh}<span class="zh"> ${p.name_en}</span>` : p.name_en
+  const sold = p.stock <= 0
+  const inq = isInquiry(p)
+  return `<div class="card">
+    <a class="card-img" href="#/product/${p.id}"><img src="${productImage(p.image_url)}" alt="${p.name_en}" loading="lazy"></a>
+    <div class="card-body">
+      <div class="card-cat">${catLabel(p.category)}</div>
+      <div class="card-title">${name}</div>
+      <div class="card-price">${priceText(p)}</div>
+      <div class="card-actions">
+        <a class="btn" href="#/product/${p.id}">${t('details')}</a>
+        ${inq
+          ? `<a class="btn btn-primary" href="${inquiryHref(p)}">${t('inquire_cta')}</a>`
+          : `<button class="btn btn-primary" data-action="add" data-id="${p.id}" ${sold ? 'disabled' : ''}>${sold ? t('out_of_stock') : t('add_to_cart')}</button>`}
+      </div>
+    </div>
+  </div>`
+}
+
+function bindAddButtons(scope) {
+  scope.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-action="add"]')
+    if (!btn || btn.disabled) return
+    try {
+      const p = await getProduct(btn.dataset.id)
+      addToCart(p, 1)
+      toast(t('add_to_cart') + ' ✓', 'success')
+    } catch (err) { toast(errText(err), 'error') }
+  })
+}
+
+async function home() {
+  const app = document.getElementById('app')
+  app.innerHTML = `
+    <section class="hero">
+      <h1 class="hero-title">${t('home_hero_title')}</h1>
+      <p class="hero-sub">${t('home_hero_sub')}</p>
+      <a href="#/products" class="btn btn-primary hero-cta">${t('home_shop_btn')}</a>
+    </section>
+    <section class="section">
+      <h2 class="section-title">${t('home_featured')}</h2>
+      <div class="grid" id="featured-grid"><div class="empty">${t('loading')}</div></div>
+    </section>`
+  try {
+    const items = await listProducts({ featured: true })
+    const grid = document.getElementById('featured-grid')
+    grid.innerHTML = items.length ? items.map(productCardHTML).join('') : `<div class="empty">${t('products_empty')}</div>`
+    bindAddButtons(grid)
+  } catch (e) { document.getElementById('featured-grid').innerHTML = `<div class="empty">${errText(e)}</div>` }
+}
+
+async function products(ctx) {
+  const active = ctx.params.category || 'all'
+  const app = document.getElementById('app')
+  app.innerHTML = `
+    <section class="section">
+      <h2 class="section-title">${t('products_title')}</h2>
+      <div class="filters" id="cat-filters">
+        ${CATEGORIES.map(c => `<button class="chip ${c === active ? 'active' : ''}" data-cat="${c}">${catLabel(c)}</button>`).join('')}
+      </div>
+      <div class="grid" id="prod-grid"><div class="empty">${t('loading')}</div></div>
+    </section>`
+  const grid = document.getElementById('prod-grid')
+  await loadGrid(grid, active)
+  document.getElementById('cat-filters').addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-cat]')
+    if (!chip) return
+    location.hash = '#/products/' + chip.dataset.cat
+  })
+  bindAddButtons(grid)
+}
+
+async function loadGrid(grid, cat) {
+  try {
+    const items = await listProducts({ category: cat })
+    grid.innerHTML = items.length ? items.map(productCardHTML).join('') : `<div class="empty">${t('products_empty')}</div>`
+  } catch (e) { grid.innerHTML = `<div class="empty">${errText(e)}</div>` }
+}
+
+async function productDetail(ctx) {
+  const id = ctx.params.id
+  const app = document.getElementById('app')
+  app.innerHTML = `<div class="empty">${t('loading')}</div>`
+  try {
+    const p = await getProduct(id)
+    const zh = getLang() === 'zh'
+    const name = zh ? p.name_zh : p.name_en
+    const sub = zh ? p.subtitle_zh : p.subtitle_en
+    const desc = zh ? p.description_zh : p.description_en
+    const specs = (zh ? p.specs_zh : p.specs_en) || []
+    const sold = p.stock <= 0
+    const inq = isInquiry(p)
+    app.innerHTML = `
+      <a href="#/products" class="btn" style="margin-bottom:16px">← ${t('back')}</a>
+      <div style="display:flex;gap:24px;flex-wrap:wrap">
+        <div style="flex:1;min-width:280px"><img src="${productImage(p.image_url)}" alt="${p.name_en}" style="border-radius:12px;background:#000;width:100%"></div>
+        <div style="flex:1;min-width:280px">
+          <div class="card-cat">${catLabel(p.category)}</div>
+          <h1 style="font-size:26px;margin:6px 0">${name}</h1>
+          ${sub ? `<div style="color:var(--muted);font-size:14px">${sub}</div>` : ''}
+          <div class="card-price" style="font-size:26px;margin:10px 0">${priceText(p)}</div>
+          <p style="margin:14px 0;color:var(--muted)">${desc || ''}</p>
+          ${specs.length ? `<div class="spec-row">${specs.map(s => `<span class="spec-pill">${s}</span>`).join('')}</div>` : ''}
+          <p style="color:var(--muted);margin-top:12px">${t('stock')}: ${p.stock}</p>
+          <div class="row" style="max-width:340px;align-items:flex-end">
+            ${inq
+              ? `<a class="btn btn-primary" style="width:100%" href="${inquiryHref(p)}">${t('inquire_cta')}</a>`
+              : `<div class="field"><label>${t('qty')}</label><input id="pd-qty" type="number" min="1" value="1"></div>
+                 <button class="btn btn-primary" id="pd-buy" ${sold ? 'disabled' : ''}>${sold ? t('out_of_stock') : t('add_to_cart')}</button>`}
+          </div>
+        </div>
+      </div>`
+    const buy = document.getElementById('pd-buy')
+    if (buy && !sold) {
+      buy.addEventListener('click', async () => {
+        const qty = Math.max(1, parseInt(document.getElementById('pd-qty').value) || 1)
+        addToCart(p, qty)
+        toast(t('add_to_cart') + ' ✓', 'success')
+      })
+    }
+  } catch (e) { app.innerHTML = `<div class="empty">${errText(e)}</div>` }
+}
+
+function cartItemHTML(i) {
+  const name = getLang() === 'zh' ? i.name_zh : i.name_en
+  const price = productPrice(i)
+  return `<div class="cart-item">
+    <img src="${productImage(i.image_url)}" alt="">
+    <div class="info">
+      <div style="font-weight:600">${name}</div>
+      <div class="order-meta">${money(price)} × ${i.qty}</div>
+    </div>
+    <input class="field cart-qty" type="number" min="1" value="${i.qty}" data-id="${i.id}">
+    <button class="btn btn-danger" data-action="remove" data-id="${i.id}">${t('cart_remove')}</button>
+  </div>`
+}
+
+async function cart() {
+  const app = document.getElementById('app')
+  const items = getCart()
+  if (!items.length) {
+    app.innerHTML = `<div class="empty">${t('cart_empty')}<br><br><a href="#/products" class="btn btn-primary">${t('cart_continue')}</a></div>`
+    return
+  }
+  app.innerHTML = `
+    <h2 class="section-title">${t('cart_title')}</h2>
+    <div id="cart-list">${items.map(cartItemHTML).join('')}</div>
+    <div class="summary">
+      <div class="line"><span>${t('cart_subtotal')}</span><span>${money(cartSubtotal())}</span></div>
+      <div class="total line"><span>${t('order_total')}</span><span>${money(cartSubtotal())}</span></div>
+      <a href="#/checkout" class="btn btn-primary btn-block" style="margin-top:14px">${t('cart_checkout')}</a>
+    </div>`
+  const list = document.getElementById('cart-list')
+  list.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action="remove"]')
+    if (!btn) return
+    removeFromCart(Number(btn.dataset.id))
+    cart() // re-render
+  })
+  list.addEventListener('change', (e) => {
+    if (e.target.classList.contains('cart-qty')) {
+      updateQty(Number(e.target.dataset.id), parseInt(e.target.value) || 1)
+      cart()
+    }
+  })
+}
+
+function payOpt(method, key) {
+  const labelMap = { stripe: t('pay_stripe'), paypal: t('pay_paypal'), wechat: t('pay_wechat'), alipay: t('pay_alipay') }
+  if (key) return `<div class="pay-opt" data-method="${method}"><b>${labelMap[method]}</b></div>`
+  return `<div class="pay-opt locked" data-method="${method}"><b>${labelMap[method]}</b><span class="disabled-tag">${t('pay_not_ready')}</span></div>`
+}
+
+async function checkout(ctx) {
+  const app = document.getElementById('app')
+  const items = getCart()
+  if (!items.length) { app.innerHTML = `<div class="empty">${t('cart_empty')}</div>`; return }
+  const cur = getCurrency()
+  app.innerHTML = `
+    <h2 class="section-title">${t('checkout_title')}</h2>
+    ${ctx.user ? '' : `<p style="color:var(--muted);margin-bottom:14px">${t('login_hint')} <a href="#/login" style="color:var(--gold)">${t('login_submit')}</a></p>`}
+    <div style="display:flex;gap:24px;flex-wrap:wrap">
+      <div style="flex:1;min-width:300px">
+        <h3 style="margin-bottom:10px">${t('checkout_shipping')}</h3>
+        <div class="field"><label>${t('name')}*</label><input id="ck-name"></div>
+        <div class="field"><label>${t('email')}*</label><input id="ck-email" value="${(ctx.user && ctx.user.email) || ''}"></div>
+        <div class="field"><label>${t('phone')}</label><input id="ck-phone"></div>
+        <div class="field"><label>${t('address')}*</label><textarea id="ck-address" rows="3"></textarea></div>
+      </div>
+      <div style="flex:1;min-width:300px">
+        <h3 style="margin-bottom:10px">${t('order_items')}</h3>
+        ${items.map(cartItemHTML).join('')}
+        <h3 style="margin:14px 0 10px">${t('payment')}</h3>
+        <div class="pay-methods" id="pay-methods">
+          <div class="pay-opt active" data-method="demo"><b>${t('pay_demo')}</b></div>
+          ${payOpt('stripe', PAYMENT_KEYS.stripe)}
+          ${payOpt('paypal', PAYMENT_KEYS.paypal)}
+          ${payOpt('wechat', PAYMENT_KEYS.wechat)}
+          ${payOpt('alipay', PAYMENT_KEYS.alipay)}
+        </div>
+        <div class="summary" style="margin-top:14px">
+          <div class="line"><span>${t('cart_subtotal')}</span><span>${money(cartSubtotal())}</span></div>
+          <div class="total line"><span>${t('order_total')}</span><span>${money(cartSubtotal())}</span></div>
+          <button class="btn btn-primary btn-block" id="ck-place" style="margin-top:14px">${t('place_order')}</button>
+        </div>
+      </div>
+    </div>`
+  let method = 'demo'
+  const pm = app.querySelector('#pay-methods')
+  pm.addEventListener('click', (e) => {
+    const opt = e.target.closest('.pay-opt')
+    if (!opt || opt.classList.contains('locked')) return
+    pm.querySelectorAll('.pay-opt').forEach(o => o.classList.remove('active'))
+    opt.classList.add('active')
+    method = opt.dataset.method
+  })
+  app.querySelector('#ck-place').addEventListener('click', async () => {
+    const name = app.querySelector('#ck-name').value.trim()
+    const email = app.querySelector('#ck-email').value.trim()
+    const address = app.querySelector('#ck-address').value.trim()
+    if (!name || !email || !address) { toast(t('fill_required'), 'error'); return }
+    const cur = getCurrency()
+    // 演示支付（demo）直接记已支付；接入真实支付渠道后应改为 pending，
+    // 再由支付回调或后台手工改 paid，避免"没付钱就算付款"。
+    const order = {
+      order_no: 'SIM' + Date.now().toString(36).toUpperCase(),
+      items: items.map(i => ({ product_id: i.id, name: getLang() === 'zh' ? i.name_zh : i.name_en, price: Number(productPrice(i)) || 0, qty: i.qty, image: i.image_url })),
+      currency: cur,
+      subtotal: cartSubtotal(),
+      total: cartSubtotal(),
+      shipping_fee: 0,
+      status: method === 'demo' ? 'paid' : 'pending',
+      payment_method: method,
+      customer_email: email,
+      shipping_name: name,
+      shipping_phone: app.querySelector('#ck-phone').value.trim(),
+      shipping_address: address,
+    }
+    const btn = app.querySelector('#ck-place')
+    btn.disabled = true; btn.textContent = t('loading')
+    const reset = () => { btn.disabled = false; btn.textContent = t('place_order') }
+    try {
+      const created = await createOrder(order)
+      // 可选：把订单转发到你的邮箱 API / 自有后端做备份通知
+      if (ORDER_WEBHOOK_URL) {
+        try { await fetch(ORDER_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(created || order) }) } catch (_) {}
+      }
+      clearCart()
+      if (ctx.user) {
+        toast(t('order_success') + ' ✓', 'success')
+        location.hash = '#/orders'
+      } else {
+        // 游客下单：没有账号就查不到订单历史，直接把订单号亮出来让他记下
+        // 游客下单走 return=minimal，数据库不回传整行，created 为 null，
+        // 订单号用前端生成的那个兜底。
+        app.innerHTML = `<div class="empty" style="padding:40px 20px">
+          <div style="font-size:18px;color:var(--gold);margin-bottom:12px">${t('order_guest_hint')}</div>
+          <div style="font-size:26px;font-weight:700;letter-spacing:1px;margin-bottom:16px">${(created && created.order_no) || order.order_no}</div>
+          <div style="color:var(--muted);margin-bottom:20px">${t('order_guest_save')}</div>
+          <a class="btn btn-primary" href="#/login">${t('nav_login')}</a>
+          <a class="btn" href="#/products" style="margin-left:8px">${t('nav_products')}</a>
+        </div>`
+      }
+    } catch (err) {
+      toast(errText(err), 'error')
+      reset()
+    }
+  })
+}
+
+function orderCardHTML(o) {
+  const items = (o.items || []).map(it => `<div class="order-item"><img src="${productImage(it.image)}"><div style="flex:1"><div>${it.name}</div><div class="order-meta">${money(it.price)} × ${it.qty}</div></div></div>`).join('')
+  return `<div class="order-card" style="flex-direction:column;align-items:stretch">
+    <div style="display:flex;justify-content:space-between">
+      <b>#${o.order_no || o.id}</b>
+      <span class="status-pill status-${o.status}">${statusLabel(o.status)}</span>
+    </div>
+    <div class="order-meta">${t('order_total')}: ${money(o.total)} · ${o.currency} · ${(o.created_at || '').slice(0, 10)}</div>
+    <div class="order-items">${items}</div>
+  </div>`
+}
+
+async function orders(ctx) {
+  const app = document.getElementById('app')
+  if (!ctx.user) {
+    app.innerHTML = `<div class="empty">${t('checkout_login_required')}<br><br><a href="#/login" class="btn btn-primary">${t('nav_login')}</a></div>`
+    return
+  }
+  app.innerHTML = `<h2 class="section-title">${t('orders_title')}</h2><div id="orders-list"><div class="empty">${t('loading')}</div></div>`
+  try {
+    const list = await listMyOrders()
+    document.getElementById('orders-list').innerHTML = list.length ? list.map(orderCardHTML).join('') : `<div class="empty">${t('orders_empty')}</div>`
+  } catch (e) { document.getElementById('orders-list').innerHTML = `<div class="empty">${errText(e)}</div>` }
+}
+
+async function login() {
+  const app = document.getElementById('app')
+  let mode = 'signin'
+
+  function draw() {
+    const isSignup = mode === 'signup'
+    app.innerHTML = `
+      <div style="max-width:380px;margin:30px auto">
+        <h2 class="section-title">${isSignup ? t('login_register_title') : t('login_title')}</h2>
+        <p style="color:var(--muted);margin-bottom:14px">${t('login_hint')}</p>
+        <div class="field"><label>${t('login_email')}</label><input id="lg-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+        <div class="field"><label>${t('login_password')}</label><input id="lg-pass" type="password" autocomplete="${isSignup ? 'new-password' : 'current-password'}" placeholder="${t('login_password_hint')}"></div>
+        <button class="btn btn-primary btn-block" id="lg-go">${isSignup ? t('login_register_submit') : t('login_submit')}</button>
+        <p style="text-align:center;margin-top:14px;color:var(--muted)">
+          ${isSignup ? t('login_have_account') : t('login_no_account')}
+          <a href="#" id="lg-toggle" style="color:var(--gold)">${isSignup ? t('login_to_signin') : t('login_to_register')}</a>
+        </p>
+        ${isBackendReady() ? '' : `<div class="empty" style="margin-top:16px">${t('backend_not_configured')}</div>`}
+      </div>`
+
+    app.querySelector('#lg-toggle').addEventListener('click', (e) => {
+      e.preventDefault()
+      mode = isSignup ? 'signin' : 'signup'
+      draw()
+    })
+
+    const submit = async () => {
+      const email = app.querySelector('#lg-email').value.trim()
+      const pass = app.querySelector('#lg-pass').value
+      if (!email || !pass) { toast(t('fill_required'), 'error'); return }
+      const btn = app.querySelector('#lg-go')
+      btn.disabled = true; btn.textContent = t('loading')
+      try {
+        if (mode === 'signup') await signUp(email, pass)
+        else await signIn(email, pass)
+        toast(t('saved') + ' ✓', 'success')
+        location.hash = '#/'
+      } catch (err) {
+        toast(errText(err), 'error')
+        btn.disabled = false
+        btn.textContent = mode === 'signup' ? t('login_register_submit') : t('login_submit')
+      }
+    }
+
+    app.querySelector('#lg-go').addEventListener('click', submit)
+    app.querySelector('#lg-pass').addEventListener('keydown', (e) => { if (e.key === 'Enter') submit() })
+  }
+
+  draw()
+}
+
+async function admin(ctx) {
+  const app = document.getElementById('app')
+  if (!ctx.user || !isAdmin(ctx.user)) { app.innerHTML = `<div class="empty">${t('not_admin')}</div>`; return }
+  if (!isBackendReady()) { app.innerHTML = `<div class="empty">${t('admin_no_backend')}</div>`; return }
+  const tab = ctx.params.tab || 'products'
+  app.innerHTML = `
+    <h2 class="section-title">${t('admin_title')}</h2>
+    <div class="admin-tabs">
+      <button class="chip ${tab === 'products' ? 'active' : ''}" data-tab="products">${t('admin_products')}</button>
+      <button class="chip ${tab === 'orders' ? 'active' : ''}" data-tab="orders">${t('admin_orders')}</button>
+    </div>
+    <div id="admin-body"><div class="empty">${t('loading')}</div></div>`
+  app.querySelector('.admin-tabs').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-tab]')
+    if (!b) return
+    location.hash = '#/admin/' + b.dataset.tab
+  })
+  const body = document.getElementById('admin-body')
+  if (tab === 'products') await renderAdminProducts(body)
+  else await renderAdminOrders(body)
+}
+
+async function renderAdminProducts(body) {
+  let list
+  try {
+    list = await listAllProducts()
+  } catch (e) {
+    body.innerHTML = `<div class="empty">${errText(e)}</div>`
+    return
+  }
+  body.innerHTML = `
+    <button class="btn btn-gold" id="adm-new" style="margin-bottom:14px">+ ${t('admin_new_product')}</button>
+    <table class="table">
+      <thead><tr><th></th><th>${t('admin_field_name_en')}</th><th>${t('admin_field_category')}</th><th>${t('admin_field_price_usd')}</th><th>${t('admin_field_stock')}</th><th>${t('admin_field_status')}</th><th></th></tr></thead>
+      <tbody>${list.map(p => `<tr>
+        <td><img src="${productImage(p.image_url)}"></td>
+        <td>${p.name_en}<br><span class="order-meta">${p.name_zh}</span></td>
+        <td>${catLabel(p.category)}</td>
+        <td>${Number(p.price_usd) > 0 ? '$' + Number(p.price_usd).toFixed(2) : '<span class="order-meta">' + t('price_request') + '</span>'}</td>
+        <td>${p.stock}</td>
+        <td>${p.status}</td>
+        <td style="white-space:nowrap">
+          <button class="btn" data-edit="${p.id}">${t('admin_edit')}</button>
+          <button class="btn" data-toggle="${p.id}" data-next="${p.status === 'published' ? 'draft' : 'published'}">${p.status === 'published' ? t('admin_unpublish') : t('admin_publish')}</button>
+          <button class="btn btn-danger" data-del="${p.id}">${t('admin_delete')}</button>
+        </td>
+      </tr>`).join('')}</tbody>
+    </table>`
+  body.querySelector('#adm-new').addEventListener('click', () => openProductModal(body, null))
+  body.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', async () => {
+    try {
+      const p = await getProduct(b.dataset.edit)
+      openProductModal(body, p)
+    } catch (e) { toast(errText(e), 'error') }
+  }))
+  // 一键上架 / 下架
+  body.querySelectorAll('[data-toggle]').forEach(b => b.addEventListener('click', async () => {
+    b.disabled = true
+    try {
+      await updateProductStatus(b.dataset.toggle, b.dataset.next)
+      toast(t('saved'), 'success')
+      renderAdminProducts(body)
+    } catch (e) { toast(errText(e), 'error'); b.disabled = false }
+  }))
+  body.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
+    if (!confirm(t('admin_confirm_delete'))) return
+    try { await deleteProduct(b.dataset.del); toast(t('saved'), 'success'); renderAdminProducts(body) }
+    catch (e) { toast(errText(e), 'error') }
+  }))
+}
+
+function openProductModal(body, p) {
+  const mask = document.createElement('div')
+  mask.className = 'modal-mask'
+  const isNew = !p
+  const v = (k, d = '') => (p ? (p[k] ?? d) : d)
+  const specsStr = (arr) => (Array.isArray(arr) ? arr.join(', ') : '')
+  mask.innerHTML = `
+    <div class="modal-box">
+      <h3>${isNew ? t('admin_new_product') : t('admin_edit')}</h3>
+      <div class="row">
+        <div class="field"><label>${t('admin_field_name_en')}*</label><input id="m-name_en" value="${v('name_en')}"></div>
+        <div class="field"><label>${t('admin_field_name_zh')}*</label><input id="m-name_zh" value="${v('name_zh')}"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>${t('admin_field_subtitle_en')}</label><input id="m-sub_en" value="${v('subtitle_en')}"></div>
+        <div class="field"><label>${t('admin_field_subtitle_zh')}</label><input id="m-sub_zh" value="${v('subtitle_zh')}"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>${t('admin_field_category')}</label><input id="m-cat" value="${v('category', 'general')}"></div>
+        <div class="field"><label>${t('admin_field_stock')}</label><input id="m-stock" type="number" value="${v('stock', 0)}"></div>
+      </div>
+      <div class="row">
+        <div class="field"><label>${t('admin_field_price_usd')}</label><input id="m-usd" type="number" step="0.01" value="${v('price_usd', 0)}"></div>
+        <div class="field"><label>${t('admin_field_price_cny')}</label><input id="m-cny" type="number" step="0.01" value="${v('price_cny', 0)}"></div>
+      </div>
+      <div class="field"><label>${t('admin_field_status')}</label><select id="m-status">
+        <option value="published" ${v('status') === 'published' ? 'selected' : ''}>${t('status_published')}</option>
+        <option value="draft" ${v('status') === 'draft' ? 'selected' : ''}>${t('status_draft')}</option>
+        <option value="archived" ${v('status') === 'archived' ? 'selected' : ''}>${t('status_archived')}</option>
+      </select></div>
+      <div class="field"><label>${t('admin_field_image')}</label><input id="m-img" value="${v('image_url')}" placeholder="https://..."></div>
+      <div class="field"><label>${t('admin_field_desc_en')}</label><textarea id="m-desc_en" rows="2">${v('description_en')}</textarea></div>
+      <div class="field"><label>${t('admin_field_desc_zh')}</label><textarea id="m-desc_zh" rows="2">${v('description_zh')}</textarea></div>
+      <div class="field"><label>${t('admin_field_specs_en')}</label><input id="m-specs_en" value="${specsStr(v('specs_en', []))}"></div>
+      <div class="field"><label>${t('admin_field_specs_zh')}</label><input id="m-specs_zh" value="${specsStr(v('specs_zh', []))}"></div>
+      <div class="field"><label><input type="checkbox" id="m-feat" ${v('featured') ? 'checked' : ''}> ${t('admin_field_featured')}</label></div>
+      <div style="display:flex;gap:10px;margin-top:10px">
+        <button class="btn btn-primary" id="m-save">${t('admin_save')}</button>
+        <button class="btn" id="m-cancel">${t('admin_cancel')}</button>
+      </div>
+    </div>`
+  document.body.appendChild(mask)
+  mask.querySelector('#m-cancel').addEventListener('click', () => mask.remove())
+  mask.addEventListener('click', (e) => { if (e.target === mask) mask.remove() })
+  mask.querySelector('#m-save').addEventListener('click', async () => {
+    const toArr = (sel) => mask.querySelector(sel).value.split(',').map(s => s.trim()).filter(Boolean)
+    const payload = {
+      name_en: mask.querySelector('#m-name_en').value.trim(),
+      name_zh: mask.querySelector('#m-name_zh').value.trim(),
+      subtitle_en: mask.querySelector('#m-sub_en').value.trim() || null,
+      subtitle_zh: mask.querySelector('#m-sub_zh').value.trim() || null,
+      category: mask.querySelector('#m-cat').value.trim() || 'general',
+      stock: parseInt(mask.querySelector('#m-stock').value || 0, 10),
+      price_usd: parseFloat(mask.querySelector('#m-usd').value || 0),
+      price_cny: parseFloat(mask.querySelector('#m-cny').value || 0),
+      status: mask.querySelector('#m-status').value,
+      image_url: mask.querySelector('#m-img').value.trim() || null,
+      description_en: mask.querySelector('#m-desc_en').value.trim(),
+      description_zh: mask.querySelector('#m-desc_zh').value.trim(),
+      specs_en: toArr('#m-specs_en'),
+      specs_zh: toArr('#m-specs_zh'),
+      featured: mask.querySelector('#m-feat').checked,
+    }
+    if (!payload.name_en || !payload.name_zh) { toast(t('fill_required'), 'error'); return }
+    const saveBtn = mask.querySelector('#m-save')
+    saveBtn.disabled = true; saveBtn.textContent = t('loading')
+    try {
+      if (!isNew) payload.id = p.id
+      await saveProduct(payload)
+      mask.remove()
+      toast(t('saved'), 'success')
+      renderAdminProducts(body)
+    } catch (e) {
+      toast(errText(e), 'error')
+      saveBtn.disabled = false; saveBtn.textContent = t('admin_save')
+    }
+  })
+}
+
+async function renderAdminOrders(body) {
+  let list
+  try {
+    list = await listAllOrdersAdmin()
+  } catch (e) {
+    body.innerHTML = `<div class="empty">${errText(e)}</div>`
+    return
+  }
+  if (!list.length) { body.innerHTML = `<div class="empty">${t('admin_orders_empty')}</div>`; return }
+
+  const statusOpts = ['pending', 'paid', 'shipped', 'completed', 'cancelled', 'failed']
+  const amt = (o) => (o.currency === 'CNY' ? '¥' : '$') + Number(o.total || 0).toFixed(2)
+
+  body.innerHTML = `<table class="table">
+    <thead><tr><th>#</th><th>${t('admin_customer')}</th><th>${t('order_items')}</th><th>${t('order_total')}</th><th>${t('order_status')}</th><th></th></tr></thead>
+    <tbody>${list.map(o => `<tr>
+      <td>#${o.order_no}<br><span class="order-meta">${String(o.created_at || '').slice(0, 16).replace('T', ' ')}</span></td>
+      <td>${o.customer_email || ''}<br><span class="order-meta">${[o.shipping_name, o.shipping_phone].filter(Boolean).join(' · ')}</span><br><span class="order-meta">${o.shipping_address || ''}</span></td>
+      <td>${(o.items || []).map(it => `${it.name} &times;${it.qty}`).join('<br>')}</td>
+      <td>${amt(o)}</td>
+      <td><span class="status-pill status-${o.status}">${statusLabel(o.status)}</span></td>
+      <td style="white-space:nowrap">
+        <select data-status="${o.id}">${statusOpts.map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${t('status_' + s)}</option>`).join('')}</select>
+        <button class="btn" data-update="${o.id}">${t('admin_order_update')}</button>
+      </td>
+    </tr>`).join('')}</tbody>
+  </table>`
+
+  body.querySelectorAll('[data-update]').forEach(b => b.addEventListener('click', async () => {
+    const id = b.dataset.update
+    const sel = body.querySelector(`select[data-status="${id}"]`)
+    b.disabled = true
+    try {
+      await updateOrderStatusAdmin(id, sel.value)
+      toast(t('saved'), 'success')
+      renderAdminOrders(body)
+    } catch (e) { toast(errText(e), 'error'); b.disabled = false }
+  }))
+}
+
+const pages = { home, products, productDetail, cart, checkout, orders, login, admin };
+
+/* ===== app.js ===== */
+// SIMDT store — app entry (router + shell)
+
+
+
+
+
+let currentUser = null
+
+function renderShell() {
+  document.getElementById('site-header').innerHTML = renderHeader(currentUser)
+  document.getElementById('site-footer').innerHTML = footerHTML()
+}
+
+function parseHash() {
+  const raw = location.hash.replace(/^#\/?/, '')
+  const parts = raw.split('/').filter(Boolean)
+  return { path: parts[0] || 'home', params: { category: parts[1], id: parts[1], tab: parts[1] } }
+}
+
+async function router() {
+  const { path, params } = parseHash()
+  const ctx = { user: currentUser, params }
+  const map = {
+    home: pages.home,
+    products: pages.products,
+    product: pages.productDetail,
+    cart: pages.cart,
+    checkout: pages.checkout,
+    orders: pages.orders,
+    login: pages.login,
+    admin: pages.admin,
+  }
+  const fn = map[path] || pages.home
+  try {
+    await fn(ctx)
+  } catch (e) {
+    console.error(e)
+    document.getElementById('app').innerHTML = `<div class="empty">${t('error')}</div>`
+  }
+  window.scrollTo(0, 0)
+}
+
+function bindHeader() {
+  document.getElementById('site-header').addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-action]')
+    if (!btn) return
+    const action = btn.dataset.action
+    if (action === 'lang') {
+      setLang(getLang() === 'zh' ? 'en' : 'zh')
+      renderShell(); router()
+    } else if (action === 'currency') {
+      setCurrency(getCurrency() === 'CNY' ? 'USD' : 'CNY')
+      renderShell(); router()
+    } else if (action === 'logout') {
+      if (confirm(t('confirm_logout'))) {
+        try { await signOut() } catch (err) { /* ignore */ }
+        location.hash = '#/'
+      }
+    }
+  })
+}
+
+async function init() {
+  renderShell()
+  bindHeader()
+  try {
+    const session = await getSession()
+    currentUser = session?.user || null
+  } catch (err) { /* not signed in */ }
+  renderShell()
+  window.addEventListener('hashchange', router)
+  window.addEventListener('cart-updated', renderShell)
+  window.addEventListener('auth-changed', async () => {
+    const s = await getSession()
+    currentUser = s.user
+    renderShell()
+  })
+  router()
+}
+
+init()
+
+</script>
+</body>
+</html>
+
+</template>
+<!-- SHOP_EMBED_END -->
+<script>
+/* 商店链接兜底：file:// 或单文件预览环境下 store/index.html 取不到时，
+   直接把内嵌的商店在覆盖层里打开，保证「立即选购 / 商店」在任何环境都能用。
+   注意：正常静态托管（GitHub Pages 等）探测到文件可访问时，仍是普通跳转到 /store/。 */
+(function () {
+  var SHOP_URL = 'store/index.html';
+  var links = [].slice.call(document.querySelectorAll('a[href="' + SHOP_URL + '"]'));
+  if (!links.length) return;
+  var state = null; /* null=未探测, true=可直接跳转, false=需内嵌打开 */
+
+  function probe() {
+    return fetch(SHOP_URL, { method: 'GET' })
+      .then(function (r) { return r.ok; })
+      .catch(function () { return false; });
+  }
+
+  function close() {
+    var box = document.getElementById('shop-overlay');
+    if (box) box.classList.remove('open');
+    document.body.classList.remove('shop-open');
+  }
+
+  function open() {
+    var box = document.getElementById('shop-overlay');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'shop-overlay';
+      box.innerHTML = '<button id="shop-close" aria-label="关闭">&times;</button><iframe title="SIMDT Store"></iframe>';
+      document.body.appendChild(box);
+      box.querySelector('#shop-close').addEventListener('click', close);
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    }
+    var tpl = document.getElementById('simdt-shop-embed');
+    var frame = box.querySelector('iframe');
+    if (tpl && !frame.getAttribute('data-ready')) {
+      frame.srcdoc = tpl.innerHTML;
+      frame.setAttribute('data-ready', '1');
+    }
+    box.classList.add('open');
+    document.body.classList.add('shop-open');
+  }
+
+  links.forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      if (state === true) return; /* 文件可访问 → 正常跳转 /store/ */
+      e.preventDefault();
+      if (state === false) { open(); return; }
+      probe().then(function (ok) {
+        state = ok;
+        if (ok) { location.href = SHOP_URL; } else { open(); }
+      });
+    });
+  });
+
+  probe().then(function (ok) { state = ok; });
+})();
 </script>
 </body>
 </html>
