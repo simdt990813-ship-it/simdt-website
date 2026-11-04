@@ -610,6 +610,7 @@ const dict = {
     price_request: '询价',
     inquire_cta: '联系询价',
     inquire_subject: 'SIMDT 产品询价',
+    chat_unavailable: '在线客服暂时无法加载，请邮件联系 simdt@qq.com',
     specs: '规格',
     qty: '数量',
     description: '描述',
@@ -743,6 +744,7 @@ const dict = {
     price_request: 'Contact for Price',
     inquire_cta: 'Inquire',
     inquire_subject: 'SIMDT product inquiry',
+    chat_unavailable: 'Live chat could not be loaded. Please email simdt@qq.com',
     specs: 'Specs',
     qty: 'Qty',
     description: 'Description',
@@ -897,6 +899,9 @@ function priceText(p) {
 // SIMDT store — optional live chat widget (Tawk.to).
 // Leave propertyId / widgetId empty to keep the store fully self-contained:
 // inquiry buttons then fall back to the plain email link.
+
+
+
 const CHAT_CONFIG = {
   propertyId: '6aeae99fb78df63c3544aaf8',
   widgetId: '1k6iq173v',
@@ -922,11 +927,10 @@ function chatInit() {
   document.head.appendChild(s1)
 }
 
-// If the widget never comes up (blocked network, ad blocker), fall back to
-// email instead of leaving the visitor clicking a dead button.
-function chatFallback(productName) {
-  const subject = encodeURIComponent('Product inquiry' + (productName ? ' - ' + productName : ''))
-  location.href = 'mailto:simdt@qq.com?subject=' + subject
+// If the widget never comes up (blocked network, ad blocker) tell the visitor
+// rather than silently doing nothing — the email address is in the message.
+function chatUnavailable() {
+  toast(t('chat_unavailable'), 'error')
 }
 
 // Open the chat panel, tagged with the product the visitor is looking at so the
@@ -943,11 +947,12 @@ function chatOpen(productName) {
         } catch (e) { /* event tagging is best-effort */ }
       }
       api.maximize()
-    } else if (tries++ < 25) {
-      setTimeout(fire, 120)
-    } else {
-      chatFallback(productName)
+      return
     }
+    // Tawk pulls its bundles asynchronously; a cold first visit can take ~10s,
+    // so keep waiting instead of declaring failure after a couple of seconds.
+    if (tries++ < 80) { setTimeout(fire, 150); return }
+    chatUnavailable()
   }
   fire()
   return true

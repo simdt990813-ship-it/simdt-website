@@ -357,6 +357,45 @@
   .form-submit:hover { background: #ff4d5a; box-shadow: 0 8px 30px var(--red-glow); }
   .form-note { font-size: 12px; color: var(--text-muted); margin-top: 12px; text-align: center; }
 
+  /* ---- LIVE CHAT BLOCK (replaces the old mailto form) ---- */
+  .chat-launch { display: flex; align-items: center; justify-content: center; gap: 10px; }
+  .chat-dot {
+    width: 9px; height: 9px; border-radius: 50%; background: #22c55e; flex: 0 0 auto;
+    box-shadow: 0 0 0 0 rgba(34,197,94,.55); animation: chatPulse 2.2s infinite;
+  }
+  @keyframes chatPulse {
+    0% { box-shadow: 0 0 0 0 rgba(34,197,94,.55); }
+    70% { box-shadow: 0 0 0 9px rgba(34,197,94,0); }
+    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+  }
+  .chat-launch.is-busy { opacity: .7; cursor: progress; }
+  .chat-label-busy { display: none; }
+  .chat-launch.is-busy .chat-label { display: none; }
+  .chat-launch.is-busy .chat-label-busy { display: inline; }
+  .chat-alt { margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .chat-alt-title {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 6px;
+  }
+  .chat-alt-mail { font-size: 17px; font-weight: 700; color: var(--accent); text-decoration: none; }
+  .chat-alt-mail:hover { text-decoration: underline; }
+  .chat-points { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 10px; }
+  .chat-points li {
+    position: relative; padding-left: 20px; font-size: 13px;
+    color: var(--text-muted); line-height: 1.65;
+  }
+  .chat-points li::before {
+    content: '\2713'; position: absolute; left: 0; top: 0;
+    color: var(--accent); font-weight: 700;
+  }
+  .chat-fallback {
+    display: none; margin-top: 14px; padding: 12px 14px; border-radius: 8px;
+    background: rgba(230,57,70,.08); border: 1px solid rgba(230,57,70,.3);
+    font-size: 12.5px; line-height: 1.65; color: var(--text);
+  }
+  .chat-fallback a { color: var(--accent); font-weight: 700; text-decoration: none; }
+  .chat-fallback a:hover { text-decoration: underline; }
+
   /* ---- LEGAL SECTION ---- */
   .legal-section { background: var(--bg-card); border-top: 1px solid var(--border); }
   .legal-grid {
@@ -581,36 +620,68 @@
         </div>
       </div>
 
-      <!-- Right: Contact Form -->
+      <!-- Right: Live chat -->
       <div class="contact-form-box">
-        <h3 data-i18n="form_title">Send a Message</h3>
-        <p class="form-subtitle" data-i18n="form_subtitle">We typically respond within 24 hours.</p>
-        <form action="mailto:simdt@qq.com" method="post" enctype="text/plain">
-          <div class="form-group">
-            <label data-i18n="form_name_label">Your Name</label>
-            <input type="text" name="name" placeholder="Your name" data-i18n-placeholder="form_name_placeholder">
-          </div>
-          <div class="form-group">
-            <label data-i18n="form_email_label">Email Address</label>
-            <input type="email" name="email" placeholder="your@email.com" data-i18n-placeholder="form_email_placeholder">
-          </div>
-          <div class="form-group">
-            <label data-i18n="form_subject_label">Subject</label>
-            <input type="text" name="subject" placeholder="Inquiry about..." data-i18n-placeholder="form_subject_placeholder">
-          </div>
-          <div class="form-group">
-            <label data-i18n="form_message_label">Message</label>
-            <textarea name="message" placeholder="Tell us how we can help..." data-i18n-placeholder="form_message_placeholder"></textarea>
-          </div>
-          <button type="submit" class="form-submit" data-i18n="form_submit">Send Message</button>
-          <p class="form-note" data-i18n="form_note">This form opens your default email client. You can also email us directly at simdt@qq.com.</p>
-        </form>
+        <h3 data-i18n="chat_title">Talk to us right now</h3>
+        <p class="form-subtitle" data-i18n="chat_subtitle">A real person, not a bot. Usually replies in a few minutes during business hours.</p>
+
+        <button type="button" class="form-submit chat-launch" id="chatLaunch" onclick="simdtOpenChat();return false;">
+          <span class="chat-dot"></span>
+          <span class="chat-label" data-i18n="chat_btn">Start Live Chat</span>
+          <span class="chat-label-busy" data-i18n="chat_connecting">Connecting&hellip;</span>
+        </button>
+
+        <div class="chat-fallback" id="chatFallback">
+          <span data-i18n="chat_fail">Live chat can't load on your network right now. Please email us instead &mdash;</span>
+          <a href="mailto:simdt@qq.com?subject=SIMDT%20inquiry">simdt@qq.com</a>
+        </div>
+
+        <ul class="chat-points">
+          <li data-i18n="chat_point1">Ask about SimHub compatibility, shipping times or bulk pricing</li>
+          <li data-i18n="chat_point2">Send us a photo and we'll identify the right part for your rig</li>
+          <li data-i18n="chat_point3">We speak English and Chinese</li>
+        </ul>
+
+        <div class="chat-alt">
+          <div class="chat-alt-title" data-i18n="chat_alt_title">Prefer email?</div>
+          <a class="chat-alt-mail" href="mailto:simdt@qq.com">simdt@qq.com</a>
+          <p class="form-note" style="text-align:left;margin-top:6px" data-i18n="chat_reply_time">Replies within 24 hours on weekdays.</p>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- LEGAL -->
+<script>
+/* Opens the Tawk.to chat panel from the "Start Live Chat" button.
+   Tawk loads asynchronously, so poll briefly; if it never arrives (blocked
+   network or ad blocker) show the email fallback instead of a dead button. */
+(function () {
+  /* Tawk loads its widget asynchronously and can take several seconds on a
+     first visit, so poll up to ~12s. If it never becomes callable (blocked
+     network / ad blocker) reveal the email fallback rather than doing nothing. */
+  var tries = 0, MAX_TRIES = 78, STEP = 150;
+  window.simdtOpenChat = function () {
+    var btn = document.getElementById('chatLaunch');
+    var tip = document.getElementById('chatFallback');
+    if (btn) btn.classList.add('is-busy');
+    tries = 0;
+    (function fire() {
+      var api = window.Tawk_API;
+      if (api && typeof api.maximize === 'function') {
+        try { api.maximize(); } catch (e) { /* ignore */ }
+        if (btn) btn.classList.remove('is-busy');
+        if (tip) tip.style.display = 'none';
+        return;
+      }
+      if (tries++ < MAX_TRIES) { setTimeout(fire, STEP); return; }
+      if (btn) btn.classList.remove('is-busy');
+      if (tip) tip.style.display = 'block';
+    })();
+  };
+})();
+</script>
 <section class="legal-section" id="legal">
   <div class="container" style="max-width:1000px;padding:60px 0;">
     <div class="section-label fade-in" data-i18n="legal_label">Legal Notice</div>
@@ -726,18 +797,16 @@ const i18n = {
     contact_location: 'Zhongshan, Guangdong, China',
     contact_channels_label: 'Official Store',
     contact_channels: 'Visit the Official Store →',
-    form_title: 'Send a Message',
-    form_subtitle: 'We typically respond within 24 hours.',
-    form_name_label: 'Your Name',
-    form_name_placeholder: 'Your name',
-    form_email_label: 'Email Address',
-    form_email_placeholder: 'your@email.com',
-    form_subject_label: 'Subject',
-    form_subject_placeholder: 'Inquiry about...',
-    form_message_label: 'Message',
-    form_message_placeholder: 'Tell us how we can help...',
-    form_submit: 'Send Message',
-    form_note: 'This form opens your default email client. You can also email us directly at simdt@qq.com.',
+    chat_title: 'Talk to us right now',
+    chat_subtitle: 'A real person, not a bot. Usually replies in a few minutes during business hours.',
+    chat_btn: 'Start Live Chat',
+    chat_connecting: 'Connecting…',
+    chat_fail: 'Live chat can\'t load on your network right now. Please email us instead —',
+    chat_point1: 'Ask about SimHub compatibility, shipping times or bulk pricing',
+    chat_point2: 'Send us a photo and we\'ll identify the right part for your rig',
+    chat_point3: 'We speak English and Chinese',
+    chat_alt_title: 'Prefer email?',
+    chat_reply_time: 'Replies within 24 hours on weekdays.',
 
     // Product cards
     p1_name: 'Haptic Feedback Motor',
@@ -889,18 +958,16 @@ const i18n = {
     contact_location: '中国广东中山',
     contact_channels_label: '官方商店',
     contact_channels: '在官方商店在线选购 →',
-    form_title: '发送消息',
-    form_subtitle: '我们通常在 24 小时内回复。',
-    form_name_label: '您的姓名',
-    form_name_placeholder: '请输入姓名',
-    form_email_label: '电子邮箱',
-    form_email_placeholder: 'your@email.com',
-    form_subject_label: '主题',
-    form_subject_placeholder: '咨询内容...',
-    form_message_label: '留言内容',
-    form_message_placeholder: '请描述您的需求...',
-    form_submit: '发送消息',
-    form_note: '此表单将通过您的默认邮箱客户端发送。您也可以直接发送邮件至 simdt@qq.com。',
+    chat_title: '现在就聊',
+    chat_subtitle: '真人客服，不是机器人。工作时间内一般几分钟就回复。',
+    chat_btn: '打开在线聊天',
+    chat_connecting: '正在连接…',
+    chat_fail: '当前网络无法加载在线聊天，请改用邮件联系我们 —',
+    chat_point1: '兼容性、发货时间、批量采购价格，直接问',
+    chat_point2: '发张照片，我们帮你确认是哪一款配件',
+    chat_point3: '中英文都能沟通',
+    chat_alt_title: '更喜欢邮件？',
+    chat_reply_time: '工作日 24 小时内回复。',
 
     p1_name: '触觉反馈马达',
     p1_tag: '热销爆款',
@@ -1686,6 +1753,7 @@ const dict = {
     price_request: '询价',
     inquire_cta: '联系询价',
     inquire_subject: 'SIMDT 产品询价',
+    chat_unavailable: '在线客服暂时无法加载，请邮件联系 simdt@qq.com',
     specs: '规格',
     qty: '数量',
     description: '描述',
@@ -1819,6 +1887,7 @@ const dict = {
     price_request: 'Contact for Price',
     inquire_cta: 'Inquire',
     inquire_subject: 'SIMDT product inquiry',
+    chat_unavailable: 'Live chat could not be loaded. Please email simdt@qq.com',
     specs: 'Specs',
     qty: 'Qty',
     description: 'Description',
@@ -1973,6 +2042,9 @@ function priceText(p) {
 // SIMDT store — optional live chat widget (Tawk.to).
 // Leave propertyId / widgetId empty to keep the store fully self-contained:
 // inquiry buttons then fall back to the plain email link.
+
+
+
 const CHAT_CONFIG = {
   propertyId: '6aeae99fb78df63c3544aaf8',
   widgetId: '1k6iq173v',
@@ -1998,11 +2070,10 @@ function chatInit() {
   document.head.appendChild(s1)
 }
 
-// If the widget never comes up (blocked network, ad blocker), fall back to
-// email instead of leaving the visitor clicking a dead button.
-function chatFallback(productName) {
-  const subject = encodeURIComponent('Product inquiry' + (productName ? ' - ' + productName : ''))
-  location.href = 'mailto:simdt@qq.com?subject=' + subject
+// If the widget never comes up (blocked network, ad blocker) tell the visitor
+// rather than silently doing nothing — the email address is in the message.
+function chatUnavailable() {
+  toast(t('chat_unavailable'), 'error')
 }
 
 // Open the chat panel, tagged with the product the visitor is looking at so the
@@ -2019,11 +2090,12 @@ function chatOpen(productName) {
         } catch (e) { /* event tagging is best-effort */ }
       }
       api.maximize()
-    } else if (tries++ < 25) {
-      setTimeout(fire, 120)
-    } else {
-      chatFallback(productName)
+      return
     }
+    // Tawk pulls its bundles asynchronously; a cold first visit can take ~10s,
+    // so keep waiting instead of declaring failure after a couple of seconds.
+    if (tries++ < 80) { setTimeout(fire, 150); return }
+    chatUnavailable()
   }
   fire()
   return true
