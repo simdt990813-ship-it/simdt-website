@@ -893,6 +893,66 @@ function priceText(p) {
   return isInquiry(p) ? t('price_request') : money(productPrice(p))
 }
 
+/* ===== chat.js ===== */
+// SIMDT store — optional live chat widget (Tawk.to).
+// Leave propertyId / widgetId empty to keep the store fully self-contained:
+// inquiry buttons then fall back to the plain email link.
+const CHAT_CONFIG = {
+  propertyId: '6aeae99fb78df63c3544aaf8',
+  widgetId: '1k6iq173v',
+}
+
+function chatReady() {
+  return !!(CHAT_CONFIG.propertyId && CHAT_CONFIG.widgetId)
+}
+
+function chatInit() {
+  if (!chatReady() || window.__simdtChatLoaded) return
+  // The brand site embeds this page in an iframe as a fallback; the parent
+  // already runs the widget, so skip it here to avoid two chat bubbles.
+  if (window.top !== window.self) return
+  window.__simdtChatLoaded = true
+  window.Tawk_API = window.Tawk_API || {}
+  window.Tawk_LoadStart = new Date()
+  const s1 = document.createElement('script')
+  s1.async = true
+  s1.src = 'https://embed.tawk.to/' + CHAT_CONFIG.propertyId + '/' + CHAT_CONFIG.widgetId
+  s1.charset = 'UTF-8'
+  s1.setAttribute('crossorigin', '*')
+  document.head.appendChild(s1)
+}
+
+// If the widget never comes up (blocked network, ad blocker), fall back to
+// email instead of leaving the visitor clicking a dead button.
+function chatFallback(productName) {
+  const subject = encodeURIComponent('Product inquiry' + (productName ? ' - ' + productName : ''))
+  location.href = 'mailto:simdt@qq.com?subject=' + subject
+}
+
+// Open the chat panel, tagged with the product the visitor is looking at so the
+// agent sees "asking about DT7 Pro" instead of a cold "Hello?".
+function chatOpen(productName) {
+  if (!chatReady()) return false
+  let tries = 0
+  const fire = () => {
+    const api = window.Tawk_API
+    if (api && typeof api.maximize === 'function') {
+      if (productName) {
+        try {
+          api.addEvent('product_inquiry', { product: productName, page: location.href })
+        } catch (e) { /* event tagging is best-effort */ }
+      }
+      api.maximize()
+    } else if (tries++ < 25) {
+      setTimeout(fire, 120)
+    } else {
+      chatFallback(productName)
+    }
+  }
+  fire()
+  return true
+}
+
 /* ===== cart.js ===== */
 // SIMDT store — shopping cart (localStorage, guest-friendly)
 
@@ -1402,6 +1462,7 @@ function statusLabel(s) {
 
 
 
+
 // 把后端错误码翻译成用户能看懂的话
 function errText(e) {
   const map = {
@@ -1430,6 +1491,17 @@ function inquiryHref(p) {
   return `mailto:${INQUIRY_MAIL}?subject=${encodeURIComponent(t('inquire_subject') + ' - ' + name)}`
 }
 
+// Live chat when configured, email link otherwise. The button carries the
+// product name so the agent knows what the visitor is asking about.
+function inquiryButton(p, extraStyle) {
+  const name = getLang() === 'zh' ? p.name_zh : p.name_en
+  const style = extraStyle ? ` ${extraStyle}` : ''
+  if (chatReady()) {
+    return `<button class="btn btn-primary"${style} data-inquire="${name.replace(/"/g, '&quot;')}">${t('inquire_cta')}</button>`
+  }
+  return `<a class="btn btn-primary"${style} href="${inquiryHref(p)}">${t('inquire_cta')}</a>`
+}
+
 function productCardHTML(p) {
   const name = getLang() === 'zh' ? `${p.name_zh}<span class="zh"> ${p.name_en}</span>` : p.name_en
   const sold = p.stock <= 0
@@ -1443,7 +1515,7 @@ function productCardHTML(p) {
       <div class="card-actions">
         <a class="btn" href="#/product/${p.id}">${t('details')}</a>
         ${inq
-          ? `<a class="btn btn-primary" href="${inquiryHref(p)}">${t('inquire_cta')}</a>`
+          ? inquiryButton(p)
           : `<button class="btn btn-primary" data-action="add" data-id="${p.id}" ${sold ? 'disabled' : ''}>${sold ? t('out_of_stock') : t('add_to_cart')}</button>`}
       </div>
     </div>
@@ -1537,7 +1609,7 @@ async function productDetail(ctx) {
           <p style="color:var(--muted);margin-top:12px">${t('stock')}: ${p.stock}</p>
           <div class="row" style="max-width:340px;align-items:flex-end">
             ${inq
-              ? `<a class="btn btn-primary" style="width:100%" href="${inquiryHref(p)}">${t('inquire_cta')}</a>`
+              ? inquiryButton(p, 'style="width:100%"')
               : `<div class="field"><label>${t('qty')}</label><input id="pd-qty" type="number" min="1" value="1"></div>
                  <button class="btn btn-primary" id="pd-buy" ${sold ? 'disabled' : ''}>${sold ? t('out_of_stock') : t('add_to_cart')}</button>`}
           </div>
@@ -1999,6 +2071,7 @@ const pages = { home, products, productDetail, cart, checkout, orders, login, ad
 
 
 
+
 let currentUser = null
 
 function renderShell() {
@@ -2055,9 +2128,20 @@ function bindHeader() {
   })
 }
 
+function bindChat() {
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-inquire]')
+    if (!btn) return
+    e.preventDefault()
+    chatOpen(btn.dataset.inquire)
+  })
+}
+
 async function init() {
   renderShell()
   bindHeader()
+  bindChat()
+  chatInit()
   try {
     const session = await getSession()
     currentUser = session?.user || null
