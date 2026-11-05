@@ -238,6 +238,7 @@ img { max-width: 100%; display: block; }
 .status-cancelled, .status-failed { color: var(--muted); }
 .status-inquiry { color: var(--gold); border-color: var(--gold); }
 .status-quoted { color: #4ade80; border-color: #4ade80; }
+.status-late { color: var(--red); border-color: var(--red); }
 .note-box {
   margin-top: 6px; padding: 8px 10px; border-radius: 6px;
   background: rgba(255,255,255,.04); border-left: 2px solid var(--gold);
@@ -246,6 +247,35 @@ img { max-width: 100%; display: block; }
 
 /* ---------- Admin ---------- */
 .admin-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+
+/* 待办条：后台第一眼只看这几件事，不用翻表格 */
+.todo-bar {
+  display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  margin-bottom: 16px; padding: 12px 14px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+}
+.todo-item { font-size: 13px; color: var(--muted); padding: 3px 11px; border-radius: 999px; background: rgba(255,255,255,.04); }
+.todo-item b { color: var(--text); margin-left: 5px; font-size: 14px; }
+.todo-item.alert { color: var(--red); background: rgba(230,57,70,.1); }
+.todo-item.alert b { color: var(--red); }
+.todo-ok { font-size: 13px; color: #4ade80; }
+
+/* 客户档案：按邮箱聚合，一个客户一张卡 */
+.cust-list { display: grid; gap: 12px; }
+.cust-card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+.cust-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 4px; }
+.cust-head b { font-size: 14px; word-break: break-all; }
+.cust-count { font-size: 12px; color: var(--gold); border: 1px solid var(--gold); border-radius: 999px; padding: 1px 9px; white-space: nowrap; }
+.cust-stats { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+.cust-stats b { color: var(--text); }
+.cust-orders { margin-top: 10px; }
+.cust-orders summary { font-size: 12px; color: var(--gold); cursor: pointer; outline: none; }
+.cust-row {
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12px;
+}
+.cust-row:last-child { border-bottom: none; }
+
 .table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .table th, .table td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); }
 .table th { color: var(--muted); font-weight: 600; }
@@ -749,7 +779,21 @@ const dict = {
     admin_unpublish: '下架',
     admin_orders_empty: '暂无订单',
     admin_customer: '客户',
+    admin_customers: '客户档案',
     admin_no_backend: '尚未连接数据库，请先按 SUPABASE_SETUP.md 完成配置',
+    todo_none: '暂无待办',
+    todo_inquiry: '待报价',
+    todo_overdue: '超 3 天未跟进',
+    todo_paid: '待发货',
+    todo_pending: '待支付',
+    cust_empty: '暂无客户记录',
+    cust_contacts: '次联系',
+    cust_quotes: '询价',
+    cust_value: '成交额',
+    cust_first: '首次',
+    cust_last: '最近',
+    cust_all: '全部记录',
+    waiting_days: '等待 {n} 天',
     loading: '加载中…',
     error: '出错了',
     saved: '已保存',
@@ -904,6 +948,20 @@ const dict = {
     admin_unpublish: 'Unpublish',
     admin_orders_empty: 'No orders yet',
     admin_customer: 'Customer',
+    admin_customers: 'Customers',
+    todo_none: 'Nothing pending',
+    todo_inquiry: 'To quote',
+    todo_overdue: 'Idle 3d+',
+    todo_paid: 'To ship',
+    todo_pending: 'Awaiting payment',
+    cust_empty: 'No customers yet',
+    cust_contacts: 'contacts',
+    cust_quotes: 'quotes',
+    cust_value: 'Value',
+    cust_first: 'First',
+    cust_last: 'Last',
+    cust_all: 'All records',
+    waiting_days: '{n}d idle',
     admin_no_backend: 'Database not connected. Complete SUPABASE_SETUP.md first',
     loading: 'Loading…',
     error: 'Something went wrong',
@@ -2095,9 +2153,11 @@ async function admin(ctx) {
   const tab = ctx.params.tab || 'products'
   app.innerHTML = `
     <h2 class="section-title">${t('admin_title')}</h2>
+    <div id="admin-todo"><div class="order-meta">${t('loading')}</div></div>
     <div class="admin-tabs">
       <button class="chip ${tab === 'products' ? 'active' : ''}" data-tab="products">${t('admin_products')}</button>
       <button class="chip ${tab === 'orders' ? 'active' : ''}" data-tab="orders">${t('admin_orders')}</button>
+      <button class="chip ${tab === 'customers' ? 'active' : ''}" data-tab="customers">${t('admin_customers')}</button>
     </div>
     <div id="admin-body"><div class="empty">${t('loading')}</div></div>`
   app.querySelector('.admin-tabs').addEventListener('click', (e) => {
@@ -2106,8 +2166,97 @@ async function admin(ctx) {
     location.hash = '#/admin/' + b.dataset.tab
   })
   const body = document.getElementById('admin-body')
+  // 订单只拉一次：待办条、订单页、客户档案页共用同一份数据
+  let orders = []
+  try { orders = await listAllOrdersAdmin() } catch (e) { /* 待办条静默降级，正文各自报错 */ }
+  renderAdminTodo(document.getElementById('admin-todo'), orders)
   if (tab === 'products') await renderAdminProducts(body)
-  else await renderAdminOrders(body)
+  else if (tab === 'customers') renderAdminCustomers(body, orders)
+  else renderAdminOrders(body, orders)
+}
+
+const DAY_MS = 86400000
+// 询价制生意的核心指标：这单等了多少天没人管
+function daysSince(iso) {
+  const t0 = Date.parse(iso || '')
+  if (!t0) return 0
+  return Math.max(0, Math.floor((Date.now() - t0) / DAY_MS))
+}
+
+function renderAdminTodo(el, orders) {
+  if (!el) return
+  const open = orders.filter(o => !['completed', 'cancelled', 'failed'].includes(o.status))
+  const toQuote = open.filter(o => o.status === 'inquiry')
+  const overdue = toQuote.filter(o => daysSince(o.created_at) >= 3)
+  const toShip = open.filter(o => o.status === 'paid')
+  const toPay = open.filter(o => o.status === 'pending' || o.status === 'quoted')
+  const items = [
+    { n: overdue.length, label: t('todo_overdue'), alert: true },
+    { n: toQuote.length, label: t('todo_inquiry'), alert: false },
+    { n: toShip.length, label: t('todo_paid'), alert: true },
+    { n: toPay.length, label: t('todo_pending'), alert: false },
+  ].filter(x => x.n > 0)
+  if (!items.length) {
+    el.innerHTML = `<div class="todo-bar"><span class="todo-ok">${t('todo_none')}</span></div>`
+    return
+  }
+  el.innerHTML = `<div class="todo-bar">${items.map(x =>
+    `<span class="todo-item${x.alert ? ' alert' : ''}">${esc(x.label)} <b>${x.n}</b></span>`).join('')}</div>`
+}
+
+function custCountry(note) {
+  const m = /Country:\s*(.+)/i.exec(note || '')
+  return m ? m[1].trim() : ''
+}
+
+function renderAdminCustomers(body, list) {
+  if (!list.length) { body.innerHTML = `<div class="empty">${t('cust_empty')}</div>`; return }
+  const map = new Map()
+  for (const o of list) {
+    const key = String(o.customer_email || '').toLowerCase()
+    if (!map.has(key)) map.set(key, { email: o.customer_email, name: '', country: '', orders: [] })
+    const c = map.get(key)
+    c.orders.push(o)
+    if (!c.name && o.shipping_name) c.name = o.shipping_name
+    if (!c.country) c.country = custCountry(o.note)
+  }
+  const rows = [...map.values()].map(c => {
+    c.orders.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
+    const quotes = c.orders.filter(o => o.payment_method === 'quote' || o.status === 'inquiry').length
+    const won = c.orders.filter(o => ['paid', 'shipped', 'completed'].includes(o.status))
+    const value = won.reduce((s, o) => s + Number(o.total || 0), 0)
+    const cur = won[0] && won[0].currency === 'CNY' ? '¥' : '$'
+    return {
+      email: c.email, name: c.name, country: c.country, orders: c.orders,
+      quotes, count: c.orders.length, value, cur,
+      firstAt: c.orders[c.orders.length - 1].created_at,
+      lastAt: c.orders[0].created_at,
+    }
+  }).sort((a, b) => String(b.lastAt).localeCompare(String(a.lastAt)))
+
+  body.innerHTML = `<div class="cust-list">${rows.map(c => `
+    <div class="cust-card">
+      <div class="cust-head">
+        <b>${esc(c.email)}</b>
+        <span class="cust-count">${c.count} ${t('cust_contacts')}</span>
+      </div>
+      <div class="order-meta">${esc([c.name, c.country].filter(Boolean).join(' · ') || '—')}</div>
+      <div class="cust-stats">
+        <span>${t('cust_quotes')} <b>${c.quotes}</b></span>
+        <span>${t('cust_first')} ${esc(String(c.firstAt || '').slice(0, 10))}</span>
+        <span>${t('cust_last')} ${esc(String(c.lastAt || '').slice(0, 10))}</span>
+        ${c.value > 0 ? `<span>${t('cust_value')} <b>${c.cur}${c.value.toFixed(2)}</b></span>` : ''}
+      </div>
+      <details class="cust-orders">
+        <summary>${t('cust_all')}</summary>
+        ${c.orders.map(o => `<div class="cust-row">
+          <span>#${esc(o.order_no)}</span>
+          <span class="status-pill status-${esc(o.status)}">${statusLabel(o.status)}</span>
+          <span class="order-meta">${esc(String(o.created_at || '').slice(0, 10))}</span>
+          <span class="order-meta">${esc((o.items || []).map(it => it.name).join(' / ').slice(0, 70))}</span>
+        </div>`).join('')}
+      </details>
+    </div>`).join('')}</div>`
 }
 
 async function renderAdminProducts(body) {
@@ -2240,13 +2389,15 @@ function openProductModal(body, p) {
   })
 }
 
-async function renderAdminOrders(body) {
-  let list
-  try {
-    list = await listAllOrdersAdmin()
-  } catch (e) {
-    body.innerHTML = `<div class="empty">${errText(e)}</div>`
-    return
+async function renderAdminOrders(body, preloaded) {
+  let list = preloaded
+  if (!list) {
+    try {
+      list = await listAllOrdersAdmin()
+    } catch (e) {
+      body.innerHTML = `<div class="empty">${errText(e)}</div>`
+      return
+    }
   }
   if (!list.length) { body.innerHTML = `<div class="empty">${t('admin_orders_empty')}</div>`; return }
 
@@ -2256,7 +2407,7 @@ async function renderAdminOrders(body) {
   body.innerHTML = `<table class="table">
     <thead><tr><th>#</th><th>${t('admin_customer')}</th><th>${t('order_items')}</th><th>${t('order_total')}</th><th>${t('order_status')}</th><th></th></tr></thead>
     <tbody>${list.map(o => `<tr>
-      <td>#${esc(o.order_no)}<br><span class="order-meta">${esc(String(o.created_at || '').slice(0, 16).replace('T', ' '))}</span>${o.payment_method === 'quote' ? `<br><span class="status-pill status-inquiry">${t('order_kind_quote')}</span>` : ''}</td>
+      <td>#${esc(o.order_no)}<br><span class="order-meta">${esc(String(o.created_at || '').slice(0, 16).replace('T', ' '))}</span>${o.payment_method === 'quote' ? `<br><span class="status-pill status-inquiry">${t('order_kind_quote')}</span>` : ''}${o.status === 'inquiry' && daysSince(o.created_at) >= 3 ? `<br><span class="status-pill status-late">${t('waiting_days').replace('{n}', daysSince(o.created_at))}</span>` : ''}</td>
       <td>${esc(o.customer_email)}<br><span class="order-meta">${esc([o.shipping_name, o.shipping_phone].filter(Boolean).join(' · '))}</span><br><span class="order-meta">${esc(o.shipping_address)}</span>${o.note ? `<div class="note-box">${esc(o.note).replace(/\n/g, '<br>')}</div>` : ''}</td>
       <td>${(o.items || []).map(it => `${esc(it.name)} &times;${Number(it.qty) || 0}${it.quote ? ' <span class="order-meta">(' + t('price_on_request') + ')</span>' : ''}`).join('<br>')}</td>
       <td>${amt(o)}</td>
