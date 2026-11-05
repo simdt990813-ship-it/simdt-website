@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="referrer" content="strict-origin-when-cross-origin" />
 <title>SIMDT · Sim Racing Store</title>
 <meta name="description" content="SIMDT 官方商店 — 赛车模拟方向盘、触觉反馈马达、风力模拟系统、按钮盒与仪表盘。SIMDT official store for sim racing hardware." />
 <link rel="canonical" href="https://www.simdt.cn/store/" />
@@ -1480,6 +1481,19 @@ function toast(msg, type = 'info') {
   setTimeout(() => div.remove(), 3200)
 }
 
+// 所有拼进 innerHTML 的外部数据都必须过这里。
+// 订单里的姓名 / 邮箱 / 备注、商品名 / 描述 / 图片地址都是「别人能写、我们照着渲染」的内容，
+// 不转义就是一个存储型 XSS：匿名访客塞 <img onerror>，管理员一开后台就执行，
+// 而登录态存在 localStorage 里 → 可直接偷走管理员 token 接管后台。
+function esc(v) {
+  return String(v == null ? '' : v)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function renderHeader(user) {
   const lang = getLang()
   const cur = getCurrency()
@@ -1487,7 +1501,7 @@ function renderHeader(user) {
     ? `<a href="#/admin" class="nav-link nav-admin">${t('nav_admin')}</a>` : ''
   const authLink = user
     ? `<a href="#/orders" class="nav-link">${t('nav_orders')}</a>
-       <span class="nav-user" title="${user.email}">${user.email}</span>
+       <span class="nav-user" title="${esc(user.email)}">${esc(user.email)}</span>
        <a href="#" class="nav-link" data-action="logout">${t('nav_logout')}</a>`
     : `<a href="#/login" class="nav-link">${t('nav_login')}</a>`
   return `
@@ -1560,7 +1574,7 @@ const CATEGORIES = ['all', 'dashboard', 'wheel', 'haptic', 'buttonbox', 'wind', 
 function catLabel(c) {
   if (c === 'all') return t('category_all')
   const label = t('cat_' + c)
-  return label === 'cat_' + c ? c : label
+  return label === 'cat_' + c ? esc(c) : label
 }
 
 const INQUIRY_MAIL = 'simdt@qq.com'
@@ -1574,26 +1588,26 @@ function inquiryHref(p) {
 function chatLinkHTML(p) {
   const name = getLang() === 'zh' ? p.name_zh : p.name_en
   if (chatReady()) {
-    return `<a href="#" data-inquire="${name.replace(/"/g, '&quot;')}" style="color:var(--gold)">${t('talk_to_us')}</a>`
+    return `<a href="#" data-inquire="${esc(name)}" style="color:var(--gold)">${t('talk_to_us')}</a>`
   }
-  return `<a href="${inquiryHref(p)}" style="color:var(--gold)">${t('talk_to_us')}</a>`
+  return `<a href="${esc(inquiryHref(p))}" style="color:var(--gold)">${t('talk_to_us')}</a>`
 }
 
 function productCardHTML(p) {
-  const name = getLang() === 'zh' ? `${p.name_zh}<span class="zh"> ${p.name_en}</span>` : p.name_en
+  const name = getLang() === 'zh' ? `${esc(p.name_zh)}<span class="zh"> ${esc(p.name_en)}</span>` : esc(p.name_en)
   const inq = isInquiry(p)
   // 询价商品不该被库存挡住 —— 客户要的是报价，不是现货
   const blocked = p.stock <= 0 && !inq
   const addLabel = blocked ? t('out_of_stock') : (inq ? t('add_to_quote') : t('add_to_cart'))
   return `<div class="card">
-    <a class="card-img" href="#/product/${p.id}"><img src="${productImage(p.image_url)}" alt="${p.name_en}" loading="lazy"></a>
+    <a class="card-img" href="#/product/${encodeURIComponent(p.id)}"><img src="${esc(productImage(p.image_url))}" alt="${esc(p.name_en)}" loading="lazy"></a>
     <div class="card-body">
       <div class="card-cat">${catLabel(p.category)}</div>
       <div class="card-title">${name}</div>
       <div class="card-price">${priceText(p)}</div>
       <div class="card-actions">
-        <a class="btn" href="#/product/${p.id}">${t('details')}</a>
-        <button class="btn btn-primary" data-action="add" data-id="${p.id}" ${blocked ? 'disabled' : ''}>${addLabel}</button>
+        <a class="btn" href="#/product/${encodeURIComponent(p.id)}">${t('details')}</a>
+        <button class="btn btn-primary" data-action="add" data-id="${esc(p.id)}" ${blocked ? 'disabled' : ''}>${addLabel}</button>
       </div>
     </div>
   </div>`
@@ -1676,15 +1690,15 @@ async function productDetail(ctx) {
     app.innerHTML = `
       <a href="#/products" class="btn" style="margin-bottom:16px">← ${t('back')}</a>
       <div style="display:flex;gap:24px;flex-wrap:wrap">
-        <div style="flex:1;min-width:280px"><img src="${productImage(p.image_url)}" alt="${p.name_en}" style="border-radius:12px;background:#000;width:100%"></div>
+        <div style="flex:1;min-width:280px"><img src="${esc(productImage(p.image_url))}" alt="${esc(p.name_en)}" style="border-radius:12px;background:#000;width:100%"></div>
         <div style="flex:1;min-width:280px">
           <div class="card-cat">${catLabel(p.category)}</div>
-          <h1 style="font-size:26px;margin:6px 0">${name}</h1>
-          ${sub ? `<div style="color:var(--muted);font-size:14px">${sub}</div>` : ''}
+          <h1 style="font-size:26px;margin:6px 0">${esc(name)}</h1>
+          ${sub ? `<div style="color:var(--muted);font-size:14px">${esc(sub)}</div>` : ''}
           <div class="card-price" style="font-size:26px;margin:10px 0">${priceText(p)}</div>
-          <p style="margin:14px 0;color:var(--muted)">${desc || ''}</p>
-          ${specs.length ? `<div class="spec-row">${specs.map(s => `<span class="spec-pill">${s}</span>`).join('')}</div>` : ''}
-          <p style="color:var(--muted);margin-top:12px">${t('stock')}: ${p.stock}</p>
+          <p style="margin:14px 0;color:var(--muted)">${esc(desc) || ''}</p>
+          ${specs.length ? `<div class="spec-row">${specs.map(s => `<span class="spec-pill">${esc(s)}</span>`).join('')}</div>` : ''}
+          <p style="color:var(--muted);margin-top:12px">${t('stock')}: ${Number(p.stock) || 0}</p>
           <div class="row" style="max-width:340px;align-items:flex-end">
             <div class="field"><label>${t('qty')}</label><input id="pd-qty" type="number" min="1" value="1"></div>
             <button class="btn btn-primary" id="pd-buy" ${blocked ? 'disabled' : ''}>${addLabel}</button>
@@ -1708,13 +1722,13 @@ function cartItemHTML(i) {
   const inq = isInquiry(i)
   const priceLine = inq ? t('price_on_request') : money(productPrice(i))
   return `<div class="cart-item">
-    <img src="${productImage(i.image_url)}" alt="">
+    <img src="${esc(productImage(i.image_url))}" alt="">
     <div class="info">
-      <div style="font-weight:600">${name}</div>
-      <div class="order-meta">${priceLine} × ${i.qty}</div>
+      <div style="font-weight:600">${esc(name)}</div>
+      <div class="order-meta">${priceLine} × ${Number(i.qty) || 0}</div>
     </div>
-    <input class="field cart-qty" type="number" min="1" value="${i.qty}" data-id="${i.id}">
-    <button class="btn btn-danger" data-action="remove" data-id="${i.id}">${t('cart_remove')}</button>
+    <input class="field cart-qty" type="number" min="1" value="${Number(i.qty) || 1}" data-id="${esc(i.id)}">
+    <button class="btn btn-danger" data-action="remove" data-id="${esc(i.id)}">${t('cart_remove')}</button>
   </div>`
 }
 
@@ -1791,10 +1805,10 @@ function isEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) }
 function quoteRowHTML(i) {
   const name = getLang() === 'zh' ? i.name_zh : i.name_en
   return `<div class="order-item">
-    <img src="${productImage(i.image_url)}" alt="">
+    <img src="${esc(productImage(i.image_url))}" alt="">
     <div style="flex:1">
-      <div>${name}</div>
-      <div class="order-meta">${isInquiry(i) ? t('price_on_request') : money(productPrice(i))} × ${i.qty}</div>
+      <div>${esc(name)}</div>
+      <div class="order-meta">${isInquiry(i) ? t('price_on_request') : money(productPrice(i))} × ${Number(i.qty) || 0}</div>
     </div>
   </div>`
 }
@@ -1812,7 +1826,7 @@ async function checkoutQuote(ctx) {
       <div style="flex:1;min-width:300px">
         <h3 style="margin-bottom:10px">${t('quote_form_title')}</h3>
         <div class="field"><label>${t('name')}*</label><input id="q-name"></div>
-        <div class="field"><label>${t('email')}*</label><input id="q-email" type="email" value="${(ctx.user && ctx.user.email) || ''}"></div>
+        <div class="field"><label>${t('email')}*</label><input id="q-email" type="email" value="${esc((ctx.user && ctx.user.email) || '')}"></div>
         <div class="field"><label>${t('company')}</label><input id="q-company"></div>
         <div class="field"><label>${t('country')}*</label><input id="q-country" placeholder="Italy / Germany / USA ..."></div>
         <div class="field"><label>${t('phone')}</label><input id="q-phone"></div>
@@ -1879,7 +1893,7 @@ async function checkoutQuote(ctx) {
         <div style="font-size:26px;font-weight:700;letter-spacing:1px;margin-bottom:16px">${no}</div>
         <div style="color:var(--muted);margin-bottom:8px">${t('quote_success_note')}</div>
         <div style="color:var(--muted);margin-bottom:20px;font-size:13px">${t('quote_save')}</div>
-        ${chatReady() ? `<button class="btn btn-primary" data-inquire="${first.replace(/"/g, '&quot;')}">${t('talk_to_us')}</button>` : ''}
+        ${chatReady() ? `<button class="btn btn-primary" data-inquire="${esc(first)}">${t('talk_to_us')}</button>` : ''}
         <a class="btn" href="#/products" style="margin-left:8px">${t('nav_products')}</a>
       </div>`
       toast(t('order_success') + ' ✓', 'success')
@@ -1904,7 +1918,7 @@ async function checkout(ctx) {
       <div style="flex:1;min-width:300px">
         <h3 style="margin-bottom:10px">${t('checkout_shipping')}</h3>
         <div class="field"><label>${t('name')}*</label><input id="ck-name"></div>
-        <div class="field"><label>${t('email')}*</label><input id="ck-email" value="${(ctx.user && ctx.user.email) || ''}"></div>
+        <div class="field"><label>${t('email')}*</label><input id="ck-email" value="${esc((ctx.user && ctx.user.email) || '')}"></div>
         <div class="field"><label>${t('phone')}</label><input id="ck-phone"></div>
         <div class="field"><label>${t('address')}*</label><textarea id="ck-address" rows="3"></textarea></div>
       </div>
@@ -1985,14 +1999,14 @@ async function checkout(ctx) {
 }
 
 function orderCardHTML(o) {
-  const items = (o.items || []).map(it => `<div class="order-item"><img src="${productImage(it.image)}"><div style="flex:1"><div>${it.name}</div><div class="order-meta">${it.quote ? t('price_on_request') : money(it.price)} × ${it.qty}</div></div></div>`).join('')
+  const items = (o.items || []).map(it => `<div class="order-item"><img src="${esc(productImage(it.image))}"><div style="flex:1"><div>${esc(it.name)}</div><div class="order-meta">${it.quote ? t('price_on_request') : money(it.price)} × ${Number(it.qty) || 0}</div></div></div>`).join('')
   const quote = o.payment_method === 'quote'
   return `<div class="order-card" style="flex-direction:column;align-items:stretch">
     <div style="display:flex;justify-content:space-between">
-      <b>#${o.order_no || o.id}</b>
-      <span class="status-pill status-${o.status}">${statusLabel(o.status)}</span>
+      <b>#${esc(o.order_no || o.id)}</b>
+      <span class="status-pill status-${esc(o.status)}">${statusLabel(o.status)}</span>
     </div>
-    <div class="order-meta">${t('order_total')}: ${quote ? t('price_on_request') : money(o.total)} · ${o.currency} · ${(o.created_at || '').slice(0, 10)}</div>
+    <div class="order-meta">${t('order_total')}: ${quote ? t('price_on_request') : money(o.total)} · ${esc(o.currency)} · ${esc(String(o.created_at || '').slice(0, 10))}</div>
     <div class="order-items">${items}</div>
   </div>`
 }
@@ -2096,12 +2110,12 @@ async function renderAdminProducts(body) {
     <table class="table">
       <thead><tr><th></th><th>${t('admin_field_name_en')}</th><th>${t('admin_field_category')}</th><th>${t('admin_field_price_usd')}</th><th>${t('admin_field_stock')}</th><th>${t('admin_field_status')}</th><th></th></tr></thead>
       <tbody>${list.map(p => `<tr>
-        <td><img src="${productImage(p.image_url)}"></td>
-        <td>${p.name_en}<br><span class="order-meta">${p.name_zh}</span></td>
+        <td><img src="${esc(productImage(p.image_url))}"></td>
+        <td>${esc(p.name_en)}<br><span class="order-meta">${esc(p.name_zh)}</span></td>
         <td>${catLabel(p.category)}</td>
         <td>${Number(p.price_usd) > 0 ? '$' + Number(p.price_usd).toFixed(2) : '<span class="order-meta">' + t('price_request') + '</span>'}</td>
-        <td>${p.stock}</td>
-        <td>${p.status}</td>
+        <td>${Number(p.stock) || 0}</td>
+        <td>${esc(p.status)}</td>
         <td style="white-space:nowrap">
           <button class="btn" data-edit="${p.id}">${t('admin_edit')}</button>
           <button class="btn" data-toggle="${p.id}" data-next="${p.status === 'published' ? 'draft' : 'published'}">${p.status === 'published' ? t('admin_unpublish') : t('admin_publish')}</button>
@@ -2137,36 +2151,38 @@ function openProductModal(body, p) {
   mask.className = 'modal-mask'
   const isNew = !p
   const v = (k, d = '') => (p ? (p[k] ?? d) : d)
+  // input 的 value 属性同样要转义：商品名里一个引号就能破坏属性并注入事件处理器
+  const va = (k, d = '') => esc(v(k, d))
   const specsStr = (arr) => (Array.isArray(arr) ? arr.join(', ') : '')
   mask.innerHTML = `
     <div class="modal-box">
       <h3>${isNew ? t('admin_new_product') : t('admin_edit')}</h3>
       <div class="row">
-        <div class="field"><label>${t('admin_field_name_en')}*</label><input id="m-name_en" value="${v('name_en')}"></div>
-        <div class="field"><label>${t('admin_field_name_zh')}*</label><input id="m-name_zh" value="${v('name_zh')}"></div>
+        <div class="field"><label>${t('admin_field_name_en')}*</label><input id="m-name_en" value="${va('name_en')}"></div>
+        <div class="field"><label>${t('admin_field_name_zh')}*</label><input id="m-name_zh" value="${va('name_zh')}"></div>
       </div>
       <div class="row">
-        <div class="field"><label>${t('admin_field_subtitle_en')}</label><input id="m-sub_en" value="${v('subtitle_en')}"></div>
-        <div class="field"><label>${t('admin_field_subtitle_zh')}</label><input id="m-sub_zh" value="${v('subtitle_zh')}"></div>
+        <div class="field"><label>${t('admin_field_subtitle_en')}</label><input id="m-sub_en" value="${va('subtitle_en')}"></div>
+        <div class="field"><label>${t('admin_field_subtitle_zh')}</label><input id="m-sub_zh" value="${va('subtitle_zh')}"></div>
       </div>
       <div class="row">
-        <div class="field"><label>${t('admin_field_category')}</label><input id="m-cat" value="${v('category', 'general')}"></div>
-        <div class="field"><label>${t('admin_field_stock')}</label><input id="m-stock" type="number" value="${v('stock', 0)}"></div>
+        <div class="field"><label>${t('admin_field_category')}</label><input id="m-cat" value="${va('category', 'general')}"></div>
+        <div class="field"><label>${t('admin_field_stock')}</label><input id="m-stock" type="number" value="${Number(v('stock', 0)) || 0}"></div>
       </div>
       <div class="row">
-        <div class="field"><label>${t('admin_field_price_usd')}</label><input id="m-usd" type="number" step="0.01" value="${v('price_usd', 0)}"></div>
-        <div class="field"><label>${t('admin_field_price_cny')}</label><input id="m-cny" type="number" step="0.01" value="${v('price_cny', 0)}"></div>
+        <div class="field"><label>${t('admin_field_price_usd')}</label><input id="m-usd" type="number" step="0.01" value="${Number(v('price_usd', 0)) || 0}"></div>
+        <div class="field"><label>${t('admin_field_price_cny')}</label><input id="m-cny" type="number" step="0.01" value="${Number(v('price_cny', 0)) || 0}"></div>
       </div>
       <div class="field"><label>${t('admin_field_status')}</label><select id="m-status">
         <option value="published" ${v('status') === 'published' ? 'selected' : ''}>${t('status_published')}</option>
         <option value="draft" ${v('status') === 'draft' ? 'selected' : ''}>${t('status_draft')}</option>
         <option value="archived" ${v('status') === 'archived' ? 'selected' : ''}>${t('status_archived')}</option>
       </select></div>
-      <div class="field"><label>${t('admin_field_image')}</label><input id="m-img" value="${v('image_url')}" placeholder="https://..."></div>
-      <div class="field"><label>${t('admin_field_desc_en')}</label><textarea id="m-desc_en" rows="2">${v('description_en')}</textarea></div>
-      <div class="field"><label>${t('admin_field_desc_zh')}</label><textarea id="m-desc_zh" rows="2">${v('description_zh')}</textarea></div>
-      <div class="field"><label>${t('admin_field_specs_en')}</label><input id="m-specs_en" value="${specsStr(v('specs_en', []))}"></div>
-      <div class="field"><label>${t('admin_field_specs_zh')}</label><input id="m-specs_zh" value="${specsStr(v('specs_zh', []))}"></div>
+      <div class="field"><label>${t('admin_field_image')}</label><input id="m-img" value="${va('image_url')}" placeholder="https://..."></div>
+      <div class="field"><label>${t('admin_field_desc_en')}</label><textarea id="m-desc_en" rows="2">${esc(v('description_en'))}</textarea></div>
+      <div class="field"><label>${t('admin_field_desc_zh')}</label><textarea id="m-desc_zh" rows="2">${esc(v('description_zh'))}</textarea></div>
+      <div class="field"><label>${t('admin_field_specs_en')}</label><input id="m-specs_en" value="${esc(specsStr(v('specs_en', [])))}"></div>
+      <div class="field"><label>${t('admin_field_specs_zh')}</label><input id="m-specs_zh" value="${esc(specsStr(v('specs_zh', [])))}"></div>
       <div class="field"><label><input type="checkbox" id="m-feat" ${v('featured') ? 'checked' : ''}> ${t('admin_field_featured')}</label></div>
       <div style="display:flex;gap:10px;margin-top:10px">
         <button class="btn btn-primary" id="m-save">${t('admin_save')}</button>
@@ -2227,14 +2243,14 @@ async function renderAdminOrders(body) {
   body.innerHTML = `<table class="table">
     <thead><tr><th>#</th><th>${t('admin_customer')}</th><th>${t('order_items')}</th><th>${t('order_total')}</th><th>${t('order_status')}</th><th></th></tr></thead>
     <tbody>${list.map(o => `<tr>
-      <td>#${o.order_no}<br><span class="order-meta">${String(o.created_at || '').slice(0, 16).replace('T', ' ')}</span>${o.payment_method === 'quote' ? `<br><span class="status-pill status-inquiry">${t('order_kind_quote')}</span>` : ''}</td>
-      <td>${o.customer_email || ''}<br><span class="order-meta">${[o.shipping_name, o.shipping_phone].filter(Boolean).join(' · ')}</span><br><span class="order-meta">${o.shipping_address || ''}</span>${o.note ? `<div class="note-box">${String(o.note).replace(/\n/g, '<br>')}</div>` : ''}</td>
-      <td>${(o.items || []).map(it => `${it.name} &times;${it.qty}${it.quote ? ' <span class="order-meta">(' + t('price_on_request') + ')</span>' : ''}`).join('<br>')}</td>
+      <td>#${esc(o.order_no)}<br><span class="order-meta">${esc(String(o.created_at || '').slice(0, 16).replace('T', ' '))}</span>${o.payment_method === 'quote' ? `<br><span class="status-pill status-inquiry">${t('order_kind_quote')}</span>` : ''}</td>
+      <td>${esc(o.customer_email)}<br><span class="order-meta">${esc([o.shipping_name, o.shipping_phone].filter(Boolean).join(' · '))}</span><br><span class="order-meta">${esc(o.shipping_address)}</span>${o.note ? `<div class="note-box">${esc(o.note).replace(/\n/g, '<br>')}</div>` : ''}</td>
+      <td>${(o.items || []).map(it => `${esc(it.name)} &times;${Number(it.qty) || 0}${it.quote ? ' <span class="order-meta">(' + t('price_on_request') + ')</span>' : ''}`).join('<br>')}</td>
       <td>${amt(o)}</td>
-      <td><span class="status-pill status-${o.status}">${statusLabel(o.status)}</span></td>
+      <td><span class="status-pill status-${esc(o.status)}">${statusLabel(o.status)}</span></td>
       <td style="white-space:nowrap">
-        <select data-status="${o.id}">${statusOpts.map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${t('status_' + s)}</option>`).join('')}</select>
-        <button class="btn" data-update="${o.id}">${t('admin_order_update')}</button>
+        <select data-status="${esc(o.id)}">${statusOpts.map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${t('status_' + s)}</option>`).join('')}</select>
+        <button class="btn" data-update="${esc(o.id)}">${t('admin_order_update')}</button>
       </td>
     </tr>`).join('')}</tbody>
   </table>`
