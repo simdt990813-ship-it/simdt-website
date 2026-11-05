@@ -2463,23 +2463,36 @@ function ensureBackend() {
 
 // ---------------- 商品 ----------------
 
+// 内置目录兜底：Supabase 暂停/故障/被墙时，不要给访客一个空白商店。
+// 只保证「看得到产品」，下单仍会失败并提示 —— 比整页空白好得多。
+function localFallback({ category, featured } = {}) {
+  let items = PRODUCTS.filter(p => (p.status || 'published') === 'published')
+  if (category && category !== 'all') items = items.filter(p => p.category === category)
+  if (featured) items = items.filter(p => p.featured)
+  return items
+}
+
 async function listProducts({ category, featured } = {}) {
-  if (!isConfigured()) {
-    let items = PRODUCTS.filter(p => (p.status || 'published') === 'published')
-    if (category && category !== 'all') items = items.filter(p => p.category === category)
-    if (featured) items = items.filter(p => p.featured)
-    return items
-  }
+  if (!isConfigured()) return localFallback({ category, featured })
   let q = 'select=*&status=eq.published&order=sort_order.asc,id.asc'
   if (category && category !== 'all') q += `&category=eq.${encodeURIComponent(category)}`
   if (featured) q += '&featured=is.true'
-  return await db.select('products', q)
+  try {
+    return await db.select('products', q)
+  } catch (e) {
+    console.warn('[simdt] products fetch failed, serving bundled catalog:', e && e.message)
+    return localFallback({ category, featured })
+  }
 }
 
 async function getProduct(id) {
   if (!isConfigured()) return PRODUCTS.find(p => String(p.id) === String(id)) || null
-  const rows = await db.select('products', `select=*&id=eq.${encodeURIComponent(id)}&limit=1`)
-  return rows[0] || null
+  try {
+    const rows = await db.select('products', `select=*&id=eq.${encodeURIComponent(id)}&limit=1`)
+    return rows[0] || null
+  } catch (e) {
+    return PRODUCTS.find(p => String(p.id) === String(id)) || null
+  }
 }
 
 // 后台用：全部商品（含草稿、下架）
