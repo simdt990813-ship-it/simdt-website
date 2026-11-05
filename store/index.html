@@ -235,6 +235,13 @@ img { max-width: 100%; display: block; }
 .status-pending { color: var(--gold); border-color: var(--gold); }
 .status-shipped { color: #60a5fa; border-color: #60a5fa; }
 .status-cancelled, .status-failed { color: var(--muted); }
+.status-inquiry { color: var(--gold); border-color: var(--gold); }
+.status-quoted { color: #4ade80; border-color: #4ade80; }
+.note-box {
+  margin-top: 6px; padding: 8px 10px; border-radius: 6px;
+  background: rgba(255,255,255,.04); border-left: 2px solid var(--gold);
+  color: var(--muted); font-size: 12px; line-height: 1.6; max-width: 260px;
+}
 
 /* ---------- Admin ---------- */
 .admin-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
@@ -608,6 +615,24 @@ const dict = {
     products_title: '全部产品',
     products_empty: '暂无产品',
     add_to_cart: '加入购物车',
+    add_to_quote: '加入询价单',
+    added_to_quote: '已加入询价单',
+    quote_title: '询价单',
+    quote_notice: '本单含未定价商品。提交后我们会在 1 个工作日内邮件回复正式报价（含运费与交期）。',
+    quote_notice_short: '价格面议，可加入询价单，也可以',
+    quote_form_title: '询价信息',
+    quote_submit: '提交询价单',
+    quote_next: '填写询价信息',
+    quote_success_hint: '询价单已提交，编号',
+    quote_success_note: '我们会在 1 个工作日内通过邮件回复正式报价，含运费与交期。',
+    quote_save: '请保存该编号，方便后续查询进度。',
+    subtotal_priced: '已定价小计',
+    price_on_request: '面议',
+    order_kind_quote: '询价单',
+    company: '公司名称',
+    country: '国家/地区',
+    requirements: '需求说明（数量 / 配置 / 交期）',
+    talk_to_us: '直接在线咨询',
     out_of_stock: '缺货',
     details: '详情',
     back: '返回',
@@ -663,8 +688,11 @@ const dict = {
     status_pending: '待支付',
     status_paid: '已支付',
     status_shipped: '已发货',
+    status_completed: '已完成',
     status_cancelled: '已取消',
     status_failed: '支付失败',
+    status_inquiry: '待报价',
+    status_quoted: '已报价',
     login_title: '登录',
     login_register_title: '注册账号',
     login_email: '邮箱',
@@ -742,6 +770,24 @@ const dict = {
     products_title: 'All Products',
     products_empty: 'No products yet',
     add_to_cart: 'Add to Cart',
+    add_to_quote: 'Add to Quote',
+    added_to_quote: 'Added to quote list',
+    quote_title: 'Quote Request',
+    quote_notice: 'This cart contains items without a fixed price. Submit the request and we will email you a formal quotation (shipping and lead time included) within 1 business day.',
+    quote_notice_short: 'Price on request — add it to your quote, or',
+    quote_form_title: 'Quote Details',
+    quote_submit: 'Send Quote Request',
+    quote_next: 'Continue to Quote',
+    quote_success_hint: 'Quote request submitted, No.',
+    quote_success_note: 'We will email you a formal quotation within 1 business day, shipping and lead time included.',
+    quote_save: 'Keep this number for follow-ups.',
+    subtotal_priced: 'Priced items subtotal',
+    price_on_request: 'On request',
+    order_kind_quote: 'Quote',
+    company: 'Company',
+    country: 'Country / Region',
+    requirements: 'Requirements (qty / configuration / lead time)',
+    talk_to_us: 'Chat with us',
     out_of_stock: 'Out of stock',
     details: 'Details',
     back: 'Back',
@@ -797,8 +843,11 @@ const dict = {
     status_pending: 'Pending',
     status_paid: 'Paid',
     status_shipped: 'Shipped',
+    status_completed: 'Completed',
     status_cancelled: 'Cancelled',
     status_failed: 'Failed',
+    status_inquiry: 'Quote Requested',
+    status_quoted: 'Quoted',
     login_title: 'Sign In',
     login_register_title: 'Create Account',
     login_email: 'Email',
@@ -1019,6 +1068,16 @@ function cartSubtotal() {
   // 走 productPrice 而不是裸 price_cny/price_usd：
   // 后台只填一种币种时按汇率折算出另一种，否则另一种币种下合计会是 0。
   return read().reduce((s, i) => s + i.qty * Number(productPrice(i) || 0), 0)
+}
+
+// 购物车里是否含「未定价」商品 → 整单走询价单流程，而不是直接下单
+function hasInquiryItems() {
+  return read().some(i => isInquiry(i))
+}
+
+// 只统计已定价部分（询价商品按 0 计），用于询价单里显示「已定价小计」
+function pricedSubtotal() {
+  return read().reduce((s, i) => s + (isInquiry(i) ? 0 : i.qty * Number(productPrice(i) || 0)), 0)
 }
 
 /* ===== products.js ===== */
@@ -1464,8 +1523,11 @@ function statusLabel(s) {
     pending: t('status_pending'),
     paid: t('status_paid'),
     shipped: t('status_shipped'),
+    completed: t('status_completed'),
     cancelled: t('status_cancelled'),
     failed: t('status_failed'),
+    inquiry: t('status_inquiry'),
+    quoted: t('status_quoted'),
   })[s] || s
 }
 
@@ -1507,21 +1569,22 @@ function inquiryHref(p) {
   return `mailto:${INQUIRY_MAIL}?subject=${encodeURIComponent(t('inquire_subject') + ' - ' + name)}`
 }
 
-// Live chat when configured, email link otherwise. The button carries the
-// product name so the agent knows what the visitor is asking about.
-function inquiryButton(p, extraStyle) {
+// Live chat when configured, email link otherwise. The link carries the product
+// name so the agent knows what the visitor is asking about.
+function chatLinkHTML(p) {
   const name = getLang() === 'zh' ? p.name_zh : p.name_en
-  const style = extraStyle ? ` ${extraStyle}` : ''
   if (chatReady()) {
-    return `<button class="btn btn-primary"${style} data-inquire="${name.replace(/"/g, '&quot;')}">${t('inquire_cta')}</button>`
+    return `<a href="#" data-inquire="${name.replace(/"/g, '&quot;')}" style="color:var(--gold)">${t('talk_to_us')}</a>`
   }
-  return `<a class="btn btn-primary"${style} href="${inquiryHref(p)}">${t('inquire_cta')}</a>`
+  return `<a href="${inquiryHref(p)}" style="color:var(--gold)">${t('talk_to_us')}</a>`
 }
 
 function productCardHTML(p) {
   const name = getLang() === 'zh' ? `${p.name_zh}<span class="zh"> ${p.name_en}</span>` : p.name_en
-  const sold = p.stock <= 0
   const inq = isInquiry(p)
+  // 询价商品不该被库存挡住 —— 客户要的是报价，不是现货
+  const blocked = p.stock <= 0 && !inq
+  const addLabel = blocked ? t('out_of_stock') : (inq ? t('add_to_quote') : t('add_to_cart'))
   return `<div class="card">
     <a class="card-img" href="#/product/${p.id}"><img src="${productImage(p.image_url)}" alt="${p.name_en}" loading="lazy"></a>
     <div class="card-body">
@@ -1530,9 +1593,7 @@ function productCardHTML(p) {
       <div class="card-price">${priceText(p)}</div>
       <div class="card-actions">
         <a class="btn" href="#/product/${p.id}">${t('details')}</a>
-        ${inq
-          ? inquiryButton(p)
-          : `<button class="btn btn-primary" data-action="add" data-id="${p.id}" ${sold ? 'disabled' : ''}>${sold ? t('out_of_stock') : t('add_to_cart')}</button>`}
+        <button class="btn btn-primary" data-action="add" data-id="${p.id}" ${blocked ? 'disabled' : ''}>${addLabel}</button>
       </div>
     </div>
   </div>`
@@ -1545,7 +1606,7 @@ function bindAddButtons(scope) {
     try {
       const p = await getProduct(btn.dataset.id)
       addToCart(p, 1)
-      toast(t('add_to_cart') + ' ✓', 'success')
+      toast((isInquiry(p) ? t('added_to_quote') : t('add_to_cart')) + ' ✓', 'success')
     } catch (err) { toast(errText(err), 'error') }
   })
 }
@@ -1609,8 +1670,9 @@ async function productDetail(ctx) {
     const sub = zh ? p.subtitle_zh : p.subtitle_en
     const desc = zh ? p.description_zh : p.description_en
     const specs = (zh ? p.specs_zh : p.specs_en) || []
-    const sold = p.stock <= 0
     const inq = isInquiry(p)
+    const blocked = p.stock <= 0 && !inq
+    const addLabel = blocked ? t('out_of_stock') : (inq ? t('add_to_quote') : t('add_to_cart'))
     app.innerHTML = `
       <a href="#/products" class="btn" style="margin-bottom:16px">← ${t('back')}</a>
       <div style="display:flex;gap:24px;flex-wrap:wrap">
@@ -1624,19 +1686,18 @@ async function productDetail(ctx) {
           ${specs.length ? `<div class="spec-row">${specs.map(s => `<span class="spec-pill">${s}</span>`).join('')}</div>` : ''}
           <p style="color:var(--muted);margin-top:12px">${t('stock')}: ${p.stock}</p>
           <div class="row" style="max-width:340px;align-items:flex-end">
-            ${inq
-              ? inquiryButton(p, 'style="width:100%"')
-              : `<div class="field"><label>${t('qty')}</label><input id="pd-qty" type="number" min="1" value="1"></div>
-                 <button class="btn btn-primary" id="pd-buy" ${sold ? 'disabled' : ''}>${sold ? t('out_of_stock') : t('add_to_cart')}</button>`}
+            <div class="field"><label>${t('qty')}</label><input id="pd-qty" type="number" min="1" value="1"></div>
+            <button class="btn btn-primary" id="pd-buy" ${blocked ? 'disabled' : ''}>${addLabel}</button>
           </div>
+          <p style="margin-top:12px;font-size:13px;color:var(--muted)">${inq ? t('quote_notice_short') : ''} ${chatLinkHTML(p)}</p>
         </div>
       </div>`
     const buy = document.getElementById('pd-buy')
-    if (buy && !sold) {
+    if (buy && !blocked) {
       buy.addEventListener('click', async () => {
         const qty = Math.max(1, parseInt(document.getElementById('pd-qty').value) || 1)
         addToCart(p, qty)
-        toast(t('add_to_cart') + ' ✓', 'success')
+        toast((inq ? t('added_to_quote') : t('add_to_cart')) + ' ✓', 'success')
       })
     }
   } catch (e) { app.innerHTML = `<div class="empty">${errText(e)}</div>` }
@@ -1644,12 +1705,13 @@ async function productDetail(ctx) {
 
 function cartItemHTML(i) {
   const name = getLang() === 'zh' ? i.name_zh : i.name_en
-  const price = productPrice(i)
+  const inq = isInquiry(i)
+  const priceLine = inq ? t('price_on_request') : money(productPrice(i))
   return `<div class="cart-item">
     <img src="${productImage(i.image_url)}" alt="">
     <div class="info">
       <div style="font-weight:600">${name}</div>
-      <div class="order-meta">${money(price)} × ${i.qty}</div>
+      <div class="order-meta">${priceLine} × ${i.qty}</div>
     </div>
     <input class="field cart-qty" type="number" min="1" value="${i.qty}" data-id="${i.id}">
     <button class="btn btn-danger" data-action="remove" data-id="${i.id}">${t('cart_remove')}</button>
@@ -1663,13 +1725,17 @@ async function cart() {
     app.innerHTML = `<div class="empty">${t('cart_empty')}<br><br><a href="#/products" class="btn btn-primary">${t('cart_continue')}</a></div>`
     return
   }
+  const quote = hasInquiryItems()
+  const priced = pricedSubtotal()
   app.innerHTML = `
-    <h2 class="section-title">${t('cart_title')}</h2>
+    <h2 class="section-title">${quote ? t('quote_title') : t('cart_title')}</h2>
+    ${quote ? `<p style="color:var(--muted);margin-bottom:12px">${t('quote_notice')}</p>` : ''}
     <div id="cart-list">${items.map(cartItemHTML).join('')}</div>
     <div class="summary">
-      <div class="line"><span>${t('cart_subtotal')}</span><span>${money(cartSubtotal())}</span></div>
-      <div class="total line"><span>${t('order_total')}</span><span>${money(cartSubtotal())}</span></div>
-      <a href="#/checkout" class="btn btn-primary btn-block" style="margin-top:14px">${t('cart_checkout')}</a>
+      ${quote && priced > 0 ? `<div class="line"><span>${t('subtotal_priced')}</span><span>${money(priced)}</span></div>` : ''}
+      ${quote ? '' : `<div class="line"><span>${t('cart_subtotal')}</span><span>${money(priced)}</span></div>`}
+      <div class="total line"><span>${t('order_total')}</span><span>${quote ? t('price_on_request') : money(priced)}</span></div>
+      <a href="#/checkout" class="btn btn-primary btn-block" style="margin-top:14px">${quote ? t('quote_next') : t('cart_checkout')}</a>
     </div>`
   const list = document.getElementById('cart-list')
   list.addEventListener('click', (e) => {
@@ -1720,10 +1786,116 @@ function payMethodsHTML() {
   </div>`
 }
 
+function isEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) }
+
+function quoteRowHTML(i) {
+  const name = getLang() === 'zh' ? i.name_zh : i.name_en
+  return `<div class="order-item">
+    <img src="${productImage(i.image_url)}" alt="">
+    <div style="flex:1">
+      <div>${name}</div>
+      <div class="order-meta">${isInquiry(i) ? t('price_on_request') : money(productPrice(i))} × ${i.qty}</div>
+    </div>
+  </div>`
+}
+
+// 询价单流程：9 款商品目前全部未定价，客户要的不是「加入购物车」而是「给我报价」。
+// 提交后落库为 status=inquiry / payment_method=quote 的订单，后台和邮件里都能跟进。
+async function checkoutQuote(ctx) {
+  const app = document.getElementById('app')
+  const items = getCart()
+  const priced = pricedSubtotal()
+  app.innerHTML = `
+    <h2 class="section-title">${t('quote_title')}</h2>
+    <p style="color:var(--muted);margin-bottom:16px">${t('quote_notice')}</p>
+    <div style="display:flex;gap:24px;flex-wrap:wrap">
+      <div style="flex:1;min-width:300px">
+        <h3 style="margin-bottom:10px">${t('quote_form_title')}</h3>
+        <div class="field"><label>${t('name')}*</label><input id="q-name"></div>
+        <div class="field"><label>${t('email')}*</label><input id="q-email" type="email" value="${(ctx.user && ctx.user.email) || ''}"></div>
+        <div class="field"><label>${t('company')}</label><input id="q-company"></div>
+        <div class="field"><label>${t('country')}*</label><input id="q-country" placeholder="Italy / Germany / USA ..."></div>
+        <div class="field"><label>${t('phone')}</label><input id="q-phone"></div>
+        <div class="field"><label>${t('requirements')}</label><textarea id="q-req" rows="3"></textarea></div>
+      </div>
+      <div style="flex:1;min-width:300px">
+        <h3 style="margin-bottom:10px">${t('order_items')}</h3>
+        ${items.map(quoteRowHTML).join('')}
+        <div class="summary" style="margin-top:14px">
+          ${priced > 0 ? `<div class="line"><span>${t('subtotal_priced')}</span><span>${money(priced)}</span></div>` : ''}
+          <div class="total line"><span>${t('order_total')}</span><span>${t('price_on_request')}</span></div>
+          <button class="btn btn-primary btn-block" id="q-place" style="margin-top:14px">${t('quote_submit')}</button>
+        </div>
+      </div>
+    </div>`
+
+  const btn = app.querySelector('#q-place')
+  btn.addEventListener('click', async () => {
+    const name = app.querySelector('#q-name').value.trim()
+    const email = app.querySelector('#q-email').value.trim()
+    const company = app.querySelector('#q-company').value.trim()
+    const country = app.querySelector('#q-country').value.trim()
+    const phone = app.querySelector('#q-phone').value.trim()
+    const req = app.querySelector('#q-req').value.trim()
+    if (!name || !email || !country) { toast(t('fill_required'), 'error'); return }
+    if (!isEmail(email)) { toast(t('err_invalid_email'), 'error'); return }
+    const order = {
+      order_no: 'RFQ' + Date.now().toString(36).toUpperCase(),
+      items: items.map(i => ({
+        product_id: i.id,
+        name: getLang() === 'zh' ? i.name_zh : i.name_en,
+        price: isInquiry(i) ? 0 : Number(productPrice(i)) || 0,
+        qty: i.qty,
+        image: i.image_url,
+        quote: isInquiry(i),
+      })),
+      currency: getCurrency(),
+      subtotal: priced,
+      total: priced,
+      shipping_fee: 0,
+      status: 'inquiry',
+      payment_method: 'quote',
+      customer_email: email,
+      shipping_name: name,
+      shipping_phone: phone || null,
+      shipping_address: null,
+      note: [
+        company ? 'Company: ' + company : '',
+        'Country: ' + country,
+        req ? 'Requirements: ' + req : '',
+      ].filter(Boolean).join('\n'),
+    }
+    btn.disabled = true; btn.textContent = t('loading')
+    try {
+      const created = await createOrder(order)
+      if (ORDER_WEBHOOK_URL) {
+        try { await fetch(ORDER_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(created || order) }) } catch (_) {}
+      }
+      const no = (created && created.order_no) || order.order_no
+      const first = getLang() === 'zh' ? items[0].name_zh : items[0].name_en
+      clearCart()
+      app.innerHTML = `<div class="empty" style="padding:40px 20px">
+        <div style="font-size:18px;color:var(--gold);margin-bottom:12px">${t('quote_success_hint')}</div>
+        <div style="font-size:26px;font-weight:700;letter-spacing:1px;margin-bottom:16px">${no}</div>
+        <div style="color:var(--muted);margin-bottom:8px">${t('quote_success_note')}</div>
+        <div style="color:var(--muted);margin-bottom:20px;font-size:13px">${t('quote_save')}</div>
+        ${chatReady() ? `<button class="btn btn-primary" data-inquire="${first.replace(/"/g, '&quot;')}">${t('talk_to_us')}</button>` : ''}
+        <a class="btn" href="#/products" style="margin-left:8px">${t('nav_products')}</a>
+      </div>`
+      toast(t('order_success') + ' ✓', 'success')
+    } catch (err) {
+      toast(errText(err), 'error')
+      btn.disabled = false; btn.textContent = t('quote_submit')
+    }
+  })
+}
+
 async function checkout(ctx) {
   const app = document.getElementById('app')
   const items = getCart()
   if (!items.length) { app.innerHTML = `<div class="empty">${t('cart_empty')}</div>`; return }
+  // 含未定价商品 → 走询价单，不要求填收货地址、不显示支付方式
+  if (hasInquiryItems()) { await checkoutQuote(ctx); return }
   const cur = getCurrency()
   app.innerHTML = `
     <h2 class="section-title">${t('checkout_title')}</h2>
@@ -1813,13 +1985,14 @@ async function checkout(ctx) {
 }
 
 function orderCardHTML(o) {
-  const items = (o.items || []).map(it => `<div class="order-item"><img src="${productImage(it.image)}"><div style="flex:1"><div>${it.name}</div><div class="order-meta">${money(it.price)} × ${it.qty}</div></div></div>`).join('')
+  const items = (o.items || []).map(it => `<div class="order-item"><img src="${productImage(it.image)}"><div style="flex:1"><div>${it.name}</div><div class="order-meta">${it.quote ? t('price_on_request') : money(it.price)} × ${it.qty}</div></div></div>`).join('')
+  const quote = o.payment_method === 'quote'
   return `<div class="order-card" style="flex-direction:column;align-items:stretch">
     <div style="display:flex;justify-content:space-between">
       <b>#${o.order_no || o.id}</b>
       <span class="status-pill status-${o.status}">${statusLabel(o.status)}</span>
     </div>
-    <div class="order-meta">${t('order_total')}: ${money(o.total)} · ${o.currency} · ${(o.created_at || '').slice(0, 10)}</div>
+    <div class="order-meta">${t('order_total')}: ${quote ? t('price_on_request') : money(o.total)} · ${o.currency} · ${(o.created_at || '').slice(0, 10)}</div>
     <div class="order-items">${items}</div>
   </div>`
 }
@@ -2048,15 +2221,15 @@ async function renderAdminOrders(body) {
   }
   if (!list.length) { body.innerHTML = `<div class="empty">${t('admin_orders_empty')}</div>`; return }
 
-  const statusOpts = ['pending', 'paid', 'shipped', 'completed', 'cancelled', 'failed']
-  const amt = (o) => (o.currency === 'CNY' ? '¥' : '$') + Number(o.total || 0).toFixed(2)
+  const statusOpts = ['inquiry', 'quoted', 'pending', 'paid', 'shipped', 'completed', 'cancelled', 'failed']
+  const amt = (o) => (o.payment_method === 'quote' ? t('price_on_request') : (o.currency === 'CNY' ? '¥' : '$') + Number(o.total || 0).toFixed(2))
 
   body.innerHTML = `<table class="table">
     <thead><tr><th>#</th><th>${t('admin_customer')}</th><th>${t('order_items')}</th><th>${t('order_total')}</th><th>${t('order_status')}</th><th></th></tr></thead>
     <tbody>${list.map(o => `<tr>
-      <td>#${o.order_no}<br><span class="order-meta">${String(o.created_at || '').slice(0, 16).replace('T', ' ')}</span></td>
-      <td>${o.customer_email || ''}<br><span class="order-meta">${[o.shipping_name, o.shipping_phone].filter(Boolean).join(' · ')}</span><br><span class="order-meta">${o.shipping_address || ''}</span></td>
-      <td>${(o.items || []).map(it => `${it.name} &times;${it.qty}`).join('<br>')}</td>
+      <td>#${o.order_no}<br><span class="order-meta">${String(o.created_at || '').slice(0, 16).replace('T', ' ')}</span>${o.payment_method === 'quote' ? `<br><span class="status-pill status-inquiry">${t('order_kind_quote')}</span>` : ''}</td>
+      <td>${o.customer_email || ''}<br><span class="order-meta">${[o.shipping_name, o.shipping_phone].filter(Boolean).join(' · ')}</span><br><span class="order-meta">${o.shipping_address || ''}</span>${o.note ? `<div class="note-box">${String(o.note).replace(/\n/g, '<br>')}</div>` : ''}</td>
+      <td>${(o.items || []).map(it => `${it.name} &times;${it.qty}${it.quote ? ' <span class="order-meta">(' + t('price_on_request') + ')</span>' : ''}`).join('<br>')}</td>
       <td>${amt(o)}</td>
       <td><span class="status-pill status-${o.status}">${statusLabel(o.status)}</span></td>
       <td style="white-space:nowrap">
