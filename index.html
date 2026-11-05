@@ -1498,6 +1498,115 @@ img { max-width: 100%; display: block; }
 <div id="toast"></div>
 <script>
 
+/* ===== analytics.js ===== */
+// SIMDT store — 轻量统计桥接层（provider 无关，ID 留空即完全静默）
+//
+// 设计要点：
+// 1) ID 留空 = 不注入任何脚本、不发任何请求、不增加任何运行开销。
+// 2) 商店是 hash 路由的 SPA（#/product/9）。绝大多数统计器的自动上报只会记
+//    一次首屏，之后切页面全丢；所以这里关掉 Umami 的自动上报，由路由在每次
+//    切换时显式发一次 pageview。产品页用 slug 而不是数字 id，后台看到的是
+//    /product/dt7-pro-dashboard，而不是 /product/9。
+// 3) 两个 provider 各自独立，填哪个就启用哪个：
+//    - Umami（主力，回答「多少人来 / 从哪来 / 待多久 / 看哪款」）
+//      cloud.umami.is — 免费 10 万事件/月、1 个站点、6 个月数据、无 cookie、无需同意条
+//    - Clarity（辅助，回答「为什么没下单」）
+//      clarity.microsoft.com — 永久免费无流量上限，会话录屏 + 热力图，数据存 30 天
+//
+// 填 ID 的位置：
+//   analytics.js 的 ANALYTICS.umamiId / ANALYTICS.clarityId
+//   品牌站 index.html 底部 analytics 配置块（两处必须填同一个 ID）
+
+const ANALYTICS = {
+  umamiId: '',    // Umami → 站点设置里的 Website ID，形如 1f2e3d4c-5a6b-7c8d-9e0f-1a2b3c4d5e6f
+  clarityId: '',  // Clarity → 项目设置里的 Project ID，形如 kx9m2p4q7s
+}
+
+const _q = []          // 脚本未就绪时的待发队列
+let _umamiReady = false
+
+function umamiOn() { return !!ANALYTICS.umamiId }
+function clarityOn() { return !!ANALYTICS.clarityId }
+function analyticsOn() { return umamiOn() || clarityOn() }
+
+function analyticsInit() {
+  if (!analyticsOn()) return
+
+  if (umamiOn()) {
+    const s = document.createElement('script')
+    s.defer = true
+    s.src = 'https://cloud.umami.is/script.js'
+    s.setAttribute('data-website-id', ANALYTICS.umamiId)
+    // 关键：关掉自动上报，改由路由精确控制（否则 SPA 只记首屏一次）
+    s.setAttribute('data-auto-track', 'false')
+    s.onload = () => {
+      _umamiReady = true
+      while (_q.length) { try { _q.shift()() } catch (e) { } }
+    }
+    s.onerror = () => { _q.length = 0 }   // 被拦截就放弃，不重试、不报错
+    document.head.appendChild(s)
+  }
+
+  if (clarityOn()) {
+    // Clarity 官方片段：内部自带队列，脚本未加载前的调用不会丢
+    (function (c, l, a, r, i, t, y) {
+      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments) }
+      t = l.createElement(r); t.async = 1; t.src = 'https://www.clarity.ms/tag/' + i
+      y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y)
+    })(window, document, 'clarity', 'script', ANALYTICS.clarityId)
+  }
+}
+
+function _umamiFire(fn) {
+  if (_umamiReady) { try { fn() } catch (e) { } }
+  else if (_q.length < 60) { _q.push(fn) }
+}
+
+// 每次路由切换调用一次。path 用可读形式，不要带 #
+function trackPageview(path, title) {
+  if (!analyticsOn() || !path) return
+  if (umamiOn()) {
+    _umamiFire(() => {
+      if (typeof window.umami === 'undefined') return
+      window.umami.track((props) => ({ ...props, url: path, title: title || document.title }))
+    })
+  }
+  if (clarityOn() && typeof window.clarity === 'function') {
+    try { window.clarity('set', 'page', path) } catch (e) { }
+  }
+}
+
+// 关键动作埋点：加购、提交询价、发起聊天、点购买
+function trackEvent(name, data) {
+  if (!analyticsOn() || !name) return
+  if (umamiOn()) {
+    _umamiFire(() => {
+      if (typeof window.umami === 'undefined') return
+      if (data) window.umami.track(name, data)
+      else window.umami.track(name)
+    })
+  }
+  if (clarityOn() && typeof window.clarity === 'function') {
+    try {
+      if (data) Object.keys(data).forEach((k) => window.clarity('set', k, String(data[k])))
+      window.clarity('event', name)
+    } catch (e) { }
+  }
+}
+
+// hash 路由 -> 可读路径。产品页不走这里（它要用 slug，由页面自己上报）
+function routePath(path, params) {
+  const p = params || {}
+  if (path === 'home') return '/'
+  if (path === 'products') return p.category && p.category !== 'all' ? '/products/' + p.category : '/products'
+  return '/' + path
+}
+
+// 后台访问不计入统计，否则你自己的巡视会污染流量数据
+function shouldTrack(path) {
+  return path !== 'admin'
+}
+
 /* ===== cloud.js ===== */
 // SIMDT store — site config (pure front-end, no backend / no secrets).
 //
@@ -2803,6 +2912,7 @@ function statusLabel(s) {
 
 
 
+
 // 把后端错误码翻译成用户能看懂的话
 function errText(e) {
   const map = {
@@ -2868,6 +2978,7 @@ function bindAddButtons(scope) {
     try {
       const p = await getProduct(btn.dataset.id)
       addToCart(p, 1)
+      trackEvent(isInquiry(p) ? 'add_to_quote' : 'add_to_cart', { product: p.name_en })
       toast((isInquiry(p) ? t('added_to_quote') : t('add_to_cart')) + ' ✓', 'success')
     } catch (err) { toast(errText(err), 'error') }
   })
@@ -2954,11 +3065,14 @@ async function productDetail(ctx) {
           <p style="margin-top:12px;font-size:13px;color:var(--muted)">${inq ? t('quote_notice_short') : ''} ${chatLinkHTML(p)}</p>
         </div>
       </div>`
+    // 产品页用 slug 上报，后台看到的是 /product/dt7-pro-dashboard 而不是 /product/9
+    trackPageview('/product/' + (p.slug || p.id), p.name_en)
     const buy = document.getElementById('pd-buy')
     if (buy && !blocked) {
       buy.addEventListener('click', async () => {
         const qty = Math.max(1, parseInt(document.getElementById('pd-qty').value) || 1)
         addToCart(p, qty)
+        trackEvent(inq ? 'add_to_quote' : 'add_to_cart', { product: p.name_en, qty: qty })
         toast((inq ? t('added_to_quote') : t('add_to_cart')) + ' ✓', 'success')
       })
     }
@@ -3130,6 +3244,7 @@ async function checkoutQuote(ctx) {
     btn.disabled = true; btn.textContent = t('loading')
     try {
       const created = await createOrder(order)
+      trackEvent('submit_quote', { items: items.length })
       if (ORDER_WEBHOOK_URL) {
         try { await fetch(ORDER_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(created || order) }) } catch (_) {}
       }
@@ -3218,6 +3333,7 @@ async function checkout(ctx) {
     const reset = () => { btn.disabled = false; btn.textContent = t('place_order') }
     try {
       const created = await createOrder(order)
+      trackEvent('place_order', { items: items.length, total: order.total })
       // 可选：把订单转发到你的邮箱 API / 自有后端做备份通知
       if (ORDER_WEBHOOK_URL) {
         try { await fetch(ORDER_WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(created || order) }) } catch (_) {}
@@ -3618,6 +3734,7 @@ const pages = { home, products, productDetail, cart, checkout, orders, login, ad
 
 
 
+
 let currentUser = null
 
 function renderShell() {
@@ -3651,6 +3768,8 @@ async function router() {
     console.error(e)
     document.getElementById('app').innerHTML = `<div class="empty">${t('error')}</div>`
   }
+  // 产品页自己上报（要用 slug 而不是数字 id），其余路由在这里统一上报
+  if (path !== 'product' && shouldTrack(path)) trackPageview(routePath(path, params))
   window.scrollTo(0, 0)
 }
 
@@ -3684,6 +3803,7 @@ function bindChat() {
 }
 
 async function init() {
+  analyticsInit()
   renderShell()
   bindHeader()
   bindChat()
@@ -3820,5 +3940,32 @@ document.head.appendChild(s1);
 })();
 </script>
 <!--End of Tawk.to Script-->
+
+<!-- ============ 访问统计（两个 ID 都留空 = 完全不加载，不影响页面） ============
+     Umami（cloud.umami.is）：免费 10 万事件/月、无 cookie、无需同意条。
+           后台 Sites → 你的站点 → Website ID（形如 1f2e3d4c-...）填到 umamiId
+     Clarity（clarity.microsoft.com）：永久免费无限量，会话录屏 + 热力图。
+           后台 Settings → Project ID 填到 clarityId
+     两个 ID 必须与商店的 simdt-store/js/analytics.js 里填的一致（同一域名共用一个站点）
+-->
+<script>
+(function () {
+  var ANALYTICS = { umamiId: '', clarityId: '' };
+  if (ANALYTICS.umamiId) {
+    var s = document.createElement('script');
+    s.defer = true;
+    s.src = 'https://cloud.umami.is/script.js';
+    s.setAttribute('data-website-id', ANALYTICS.umamiId);
+    document.head.appendChild(s);
+  }
+  if (ANALYTICS.clarityId) {
+    (function (c, l, a, r, i, t, y) {
+      c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
+      t = l.createElement(r); t.async = 1; t.src = 'https://www.clarity.ms/tag/' + i;
+      y = l.getElementsByTagName(r)[0]; y.parentNode.insertBefore(t, y);
+    })(window, document, 'clarity', 'script', ANALYTICS.clarityId);
+  }
+})();
+</script>
 </body>
 </html>
