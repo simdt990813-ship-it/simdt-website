@@ -12,11 +12,25 @@
 <meta property="og:url" content="https://www.simdt.cn">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="SIMDT">
+<meta property="og:image" content="https://www.simdt.cn/images/product-dt7pro.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="675">
+<meta property="og:image:alt" content="SIMDT DT7 Pro 智能仪表盘 / Smart Dashboard">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SIMDT | Racing Simulation Hardware">
+<meta name="twitter:description" content="Professional-grade sim racing hardware — haptic feedback motors, wind simulation, button boxes and dashboards.">
+<meta name="twitter:image" content="https://www.simdt.cn/images/product-dt7pro.jpg">
 <link rel="icon" href="images/favicon.svg" type="image/svg+xml">
 <link rel="alternate icon" href="favicon.ico" type="image/x-icon">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<!-- Fonts load without blocking first paint: Google's stylesheet is ~150 KB and
+     is unreachable from some networks (mainland China), where a blocking
+     stylesheet would leave the page blank until the request times out. -->
+<link rel="preload" as="style"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap"></noscript>
 <style>
   :root {
     /* SIMDT Brand Colors — per VI Guide */
@@ -105,9 +119,11 @@
   }
   .lang-toggle:hover { border-color: var(--accent); color: var(--accent); }
   .mobile-menu-btn {
-    display: none; background: none; border: none;
-    color: #fff; font-size: 24px; cursor: pointer;
+    display: none; background: none; border: 1px solid var(--border);
+    color: #fff; font-size: 18px; line-height: 1; cursor: pointer;
+    border-radius: 8px; padding: 7px 10px; transition: border-color 0.2s;
   }
+  .mobile-menu-btn:hover { border-color: var(--accent); }
 
   /* ---- HERO ---- */
   .hero {
@@ -116,7 +132,10 @@
     max-width: 1280px; margin: 0 auto;
   }
   .hero::before {
-    content: ''; position: absolute; top: 0; right: -200px;
+    content: ''; position: absolute; top: 0;
+    /* Stick to the browser's right edge on wide screens without overflowing the
+       document — a plain right:-200px widened the mobile layout viewport to 590px. */
+    right: calc(-1 * max(0px, (100vw - 1280px) / 2));
     width: 700px; height: 700px;
     background: radial-gradient(circle, var(--accent-glow), transparent 70%);
     pointer-events: none;
@@ -457,10 +476,23 @@
     .hero { padding: 100px 24px 60px; }
     .hero h1 { font-size: 34px; }
     .hero p { font-size: 16px; }
+    .hero::before { width: 420px; height: 420px; }
     section { padding: 60px 24px; }
     .section-title { font-size: 30px; }
     .nav-links { display: none; }
     .mobile-menu-btn { display: block; }
+    /* Slide-down menu — the links were hidden on phones with no way to reach them. */
+    .nav-links.open {
+      display: flex; flex-direction: column; align-items: stretch;
+      position: absolute; top: 68px; left: 0; right: 0;
+      gap: 0; padding: 4px 24px 12px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.6);
+    }
+    .nav-links.open li { border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .nav-links.open li:last-child { border-bottom: none; }
+    .nav-links.open a { display: block; padding: 14px 0; font-size: 15px; }
     .products-grid { grid-template-columns: 1fr; }
     .navbar-inner { padding: 0 24px; }
   }
@@ -486,8 +518,10 @@
       <li><a href="store/index.html" data-i18n="nav_shop">Shop</a></li>
       <li><a href="#contact" data-i18n="nav_contact">Contact</a></li>
     </ul>
-    <div style="display:flex;align-items:center;gap:16px;">
+    <div style="display:flex;align-items:center;gap:12px;">
       <button class="lang-toggle" id="langToggle" onclick="toggleLang()">EN</button>
+      <button class="mobile-menu-btn" id="menuBtn" type="button"
+              aria-label="Menu" aria-expanded="false" aria-controls="navLinks">☰</button>
     </div>
   </div>
 </nav>
@@ -1147,6 +1181,17 @@ document.addEventListener('DOMContentLoaded', () => {
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SIMDT · Sim Racing Store</title>
+<meta name="description" content="SIMDT 官方商店 — 赛车模拟方向盘、触觉反馈马达、风力模拟系统、按钮盒与仪表盘。SIMDT official store for sim racing hardware." />
+<link rel="canonical" href="https://www.simdt.cn/store/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="SIMDT" />
+<meta property="og:title" content="SIMDT · Sim Racing Store" />
+<meta property="og:description" content="Official SIMDT store — steering wheels, haptic motors, wind simulation, button boxes and dashboards." />
+<meta property="og:url" content="https://www.simdt.cn/store/" />
+<meta property="og:image" content="https://www.simdt.cn/images/product-dt7pro.jpg" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://www.simdt.cn/images/product-dt7pro.jpg" />
+<link rel="icon" href="../images/favicon.svg" type="image/svg+xml" />
 <style>
 :root {
   --black: #0A0A0A;
@@ -3313,6 +3358,44 @@ init()
 
 </template>
 <!-- SHOP_EMBED_END -->
+<script>
+/* Mobile menu — under 768px the nav links are display:none, and until now there
+   was no button to reveal them, so phones had no navigation at all. */
+(function () {
+  var btn = document.getElementById('menuBtn');
+  var links = document.getElementById('navLinks');
+  if (!btn || !links) return;
+
+  function setOpen(open) {
+    links.classList.toggle('open', open);
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.textContent = open ? '\u2715' : '\u2630';
+  }
+
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    setOpen(!links.classList.contains('open'));
+  });
+
+  links.addEventListener('click', function (e) {
+    if (e.target.closest('a')) setOpen(false);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') setOpen(false);
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!links.classList.contains('open')) return;
+    if (links.contains(e.target) || btn.contains(e.target)) return;
+    setOpen(false);
+  });
+
+  window.addEventListener('resize', function () {
+    if (window.innerWidth > 768) setOpen(false);
+  });
+})();
+</script>
 <script>
 /* 商店链接兜底：file:// 或单文件预览环境下 store/index.html 取不到时，
    直接把内嵌的商店在覆盖层里打开，保证「立即选购 / 商店」在任何环境都能用。
