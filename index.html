@@ -1421,6 +1421,14 @@ img { max-width: 100%; display: block; }
 }
 .summary .line { display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--muted); }
 .summary .total { color: var(--text); font-weight: 700; font-size: 18px; border-top: 1px solid var(--border); padding-top: 10px; }
+/* 运费待报价：金额位置上放文字，必须比普通 line 更显眼，但不抢合计的视觉权重 */
+.summary .ship-pending { color: var(--gold); font-size: 12px; letter-spacing: .3px; }
+.ddp-note {
+  margin-top: 12px; font-size: 12px; line-height: 1.65; color: var(--muted);
+  border-left: 2px solid var(--gold); padding: 2px 0 2px 10px;
+}
+/* 原生下拉在深色页里默认白底黑字，选项区要单独指定，否则展开后一片惨白 */
+.field select option, .field select optgroup { background: #1c1c1c; color: var(--text); }
 
 .pay-methods { display: flex; flex-direction: column; gap: 10px; }
 .pay-opt {
@@ -1491,6 +1499,16 @@ img { max-width: 100%; display: block; }
   border-radius: 6px; padding: 6px 8px; font-size: 12px; margin-right: 6px;
 }
 .table select:focus { outline: none; border-color: var(--gold); }
+
+/* 后台补录运费：跟状态下拉并排会挤爆，单独占一行 */
+.ship-edit { display: flex; align-items: center; gap: 4px; margin-top: 6px; }
+.ship-edit input {
+  width: 64px; background: var(--panel-2); color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px; padding: 5px 6px;
+  font-size: 12px; font-family: inherit;
+}
+.ship-edit input:focus { outline: none; border-color: var(--gold); }
+.ship-cur { color: var(--muted); font-size: 12px; }
 
 /* ---------- Modal ---------- */
 .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,.6); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
@@ -1972,7 +1990,7 @@ const dict = {
     add_to_quote: '加入询价单',
     added_to_quote: '已加入询价单',
     quote_title: '询价单',
-    quote_notice: '本单含未定价商品。提交后我们会在 1 个工作日内邮件回复正式报价（含运费与交期）。',
+    quote_notice: '本单含未定价商品。提交后我们会在 1 个工作日内邮件回复正式报价（DDP 到门价，含国际运费与关税）。',
     quote_notice_short: '价格面议，可加入询价单，也可以',
     quote_form_title: '询价信息',
     quote_submit: '提交询价单',
@@ -2028,9 +2046,17 @@ const dict = {
     pay_alipay: '支付宝',
     pay_not_ready: '该支付方式待接入，请在后台配置商户密钥',
     pay_invoice: '下单后邮件确认付款',
-    pay_invoice_desc: '提交订单后我们会通过邮件与你确认付款方式（PayPal / 银行转账），确认到账后再安排发货。',
+    pay_invoice_desc: '提交订单后我们会通过邮件与你确认 DDP 到门价（含运费与关税）与付款方式（PayPal / 银行转账），确认到账后再安排发货。',
     place_order: '提交订单',
-    order_success: '下单成功',
+    order_success: '订单已提交',
+    postal_code: '邮编（选填）',
+    address_ph: '街道 / 门牌 / 城市 / 州省',
+    ship_ddp_line: '国际运费与关税',
+    ship_ddp_short: '运费',
+    ship_tbd: '待报价',
+    total_excl_ship: '合计（未含运费）',
+    ddp_note: 'DDP 到门价：报价已包含国际运费与目的国关税，收货时无需再支付任何额外费用。我们会在 1 个工作日内邮件确认金额并安排付款。',
+    err_invalid_amount: '金额格式不正确',
     order_no: '订单号',
     order_paid: '已支付',
     order_pending: '待支付',
@@ -2069,7 +2095,7 @@ const dict = {
     backend_error: '服务器请求失败，请稍后重试',
     order_guest_hint: '订单已提交，订单号',
     order_guest_save: '请保存订单号。注册登录后可随时查看订单状态。',
-    order_pending_note: '订单已进入待支付状态，我们会在 1 个工作日内通过邮件与你确认付款方式（PayPal / 银行转账）。',
+    order_pending_note: '订单已收到，我们会在 1 个工作日内邮件发送 DDP 到门报价（含国际运费与关税），确认付款后再安排发货。',
     admin_title: '管理后台',
     admin_products: '商品管理',
     admin_orders: '订单管理',
@@ -2090,6 +2116,9 @@ const dict = {
     admin_field_desc_zh: '中文描述',
     admin_field_featured: '精选',
     admin_order_update: '更新状态',
+    admin_shipping_fee: '运费',
+    admin_save_ship: '存运费',
+    admin_ship_saved: '运费已录入，订单总额 {n}',
     admin_confirm_delete: '确认删除该商品？',
     status_published: '已上架',
     status_draft: '草稿',
@@ -2141,7 +2170,7 @@ const dict = {
     add_to_quote: 'Add to Quote',
     added_to_quote: 'Added to quote list',
     quote_title: 'Quote Request',
-    quote_notice: 'This cart contains items without a fixed price. Submit the request and we will email you a formal quotation (shipping and lead time included) within 1 business day.',
+    quote_notice: 'This cart contains items without a fixed price. Submit the request and we will email a formal DDP door-to-door quotation (shipping and duties included) within 1 business day.',
     quote_notice_short: 'Price on request — add it to your quote, or',
     quote_form_title: 'Quote Details',
     quote_submit: 'Send Quote Request',
@@ -2197,9 +2226,16 @@ const dict = {
     pay_alipay: 'Alipay',
     pay_not_ready: 'This method is not connected yet — configure merchant keys in admin',
     pay_invoice: 'Payment confirmed by email',
-    pay_invoice_desc: 'After you submit the order we will email you to confirm payment (PayPal / bank transfer). We ship once payment is received.',
+    pay_invoice_desc: 'After you submit the order we will email you a DDP door-to-door quote (shipping and duties included) and confirm payment (PayPal / bank transfer). We ship once payment is received.',
     place_order: 'Place Order',
-    order_success: 'Order placed',
+    order_success: 'Order submitted',
+    postal_code: 'Postal code (optional)',
+    address_ph: 'Street / number / city / state',
+    ship_ddp_line: 'Shipping & duties',
+    ship_ddp_short: 'Shipping',
+    ship_tbd: 'To be quoted',
+    total_excl_ship: 'Total (excl. shipping)',
+    ddp_note: 'DDP door-to-door: our quote includes international shipping and destination duties, so there are no extra charges on delivery. We will email the final amount within 1 business day.',
     order_no: 'Order No.',
     order_paid: 'Paid',
     order_pending: 'Pending',
@@ -2238,7 +2274,7 @@ const dict = {
     backend_error: 'Server request failed, please retry',
     order_guest_hint: 'Order submitted. Order number',
     order_guest_save: 'Save this order number. Sign in to track your orders anytime.',
-    order_pending_note: 'Your order is awaiting payment. We will email you within 1 business day to confirm the payment method (PayPal / bank transfer).',
+    order_pending_note: 'Order received. We will email you a DDP door-to-door quote (shipping and duties included) within 1 business day, and ship once payment is confirmed.',
     admin_title: 'Admin',
     admin_products: 'Products',
     admin_orders: 'Orders',
@@ -2259,6 +2295,9 @@ const dict = {
     admin_field_desc_zh: 'Desc (ZH)',
     admin_field_featured: 'Featured',
     admin_order_update: 'Update Status',
+    admin_shipping_fee: 'Shipping',
+    admin_save_ship: 'Save',
+    admin_ship_saved: 'Shipping saved, order total {n}',
     admin_confirm_delete: 'Delete this product?',
     status_published: 'Published',
     status_draft: 'Draft',
@@ -2335,6 +2374,158 @@ function isInquiry(p) {
 
 function priceText(p) {
   return isInquiry(p) ? t('price_request') : money(productPrice(p))
+}
+
+/* ===== countries.js ===== */
+// 结算页「国家/地区」清单 —— 只列 SIMDT 有实际订单往来的市场，
+// 不做 200 多项的全量下拉（客户翻三屏才能找到自己国家，反而更容易放弃下单）。
+//
+// value 用英文名而不是 ISO 代码：这个值最终会写进订单的 shipping_address / note，
+// 做面单和报关时直接可读，不会出现「IT 是哪国」这种歧义。
+// 港澳台按中国特别行政区 / 地区表述，不做国家处理。
+
+const COUNTRY_GROUPS = [
+  {
+    zh: '中国', en: 'China',
+    items: [
+      { zh: '中国大陆', en: 'China (mainland)' },
+      { zh: '中国香港', en: 'Hong Kong, China' },
+      { zh: '中国澳门', en: 'Macao, China' },
+      { zh: '中国台湾', en: 'Taiwan, China' },
+    ],
+  },
+  {
+    zh: '亚太', en: 'Asia Pacific',
+    items: [
+      { zh: '日本', en: 'Japan' },
+      { zh: '韩国', en: 'South Korea' },
+      { zh: '新加坡', en: 'Singapore' },
+      { zh: '马来西亚', en: 'Malaysia' },
+      { zh: '泰国', en: 'Thailand' },
+      { zh: '越南', en: 'Vietnam' },
+      { zh: '印度尼西亚', en: 'Indonesia' },
+      { zh: '菲律宾', en: 'Philippines' },
+      { zh: '印度', en: 'India' },
+      { zh: '澳大利亚', en: 'Australia' },
+      { zh: '新西兰', en: 'New Zealand' },
+    ],
+  },
+  {
+    zh: '欧洲', en: 'Europe',
+    items: [
+      { zh: '英国', en: 'United Kingdom' },
+      { zh: '爱尔兰', en: 'Ireland' },
+      { zh: '德国', en: 'Germany' },
+      { zh: '法国', en: 'France' },
+      { zh: '荷兰', en: 'Netherlands' },
+      { zh: '比利时', en: 'Belgium' },
+      { zh: '卢森堡', en: 'Luxembourg' },
+      { zh: '奥地利', en: 'Austria' },
+      { zh: '瑞士', en: 'Switzerland' },
+      { zh: '意大利', en: 'Italy' },
+      { zh: '西班牙', en: 'Spain' },
+      { zh: '葡萄牙', en: 'Portugal' },
+      { zh: '波兰', en: 'Poland' },
+      { zh: '捷克', en: 'Czechia' },
+      { zh: '斯洛伐克', en: 'Slovakia' },
+      { zh: '匈牙利', en: 'Hungary' },
+      { zh: '斯洛文尼亚', en: 'Slovenia' },
+      { zh: '克罗地亚', en: 'Croatia' },
+      { zh: '罗马尼亚', en: 'Romania' },
+      { zh: '保加利亚', en: 'Bulgaria' },
+      { zh: '希腊', en: 'Greece' },
+      { zh: '瑞典', en: 'Sweden' },
+      { zh: '挪威', en: 'Norway' },
+      { zh: '丹麦', en: 'Denmark' },
+      { zh: '芬兰', en: 'Finland' },
+      { zh: '冰岛', en: 'Iceland' },
+      { zh: '爱沙尼亚', en: 'Estonia' },
+      { zh: '拉脱维亚', en: 'Latvia' },
+      { zh: '立陶宛', en: 'Lithuania' },
+      { zh: '乌克兰', en: 'Ukraine' },
+      { zh: '俄罗斯', en: 'Russia' },
+      { zh: '土耳其', en: 'Turkey' },
+    ],
+  },
+  {
+    zh: '北美', en: 'North America',
+    items: [
+      { zh: '美国', en: 'United States' },
+      { zh: '加拿大', en: 'Canada' },
+      { zh: '墨西哥', en: 'Mexico' },
+    ],
+  },
+  {
+    zh: '拉美', en: 'Latin America',
+    items: [
+      { zh: '巴西', en: 'Brazil' },
+      { zh: '阿根廷', en: 'Argentina' },
+      { zh: '智利', en: 'Chile' },
+      { zh: '哥伦比亚', en: 'Colombia' },
+      { zh: '秘鲁', en: 'Peru' },
+    ],
+  },
+  {
+    zh: '中东', en: 'Middle East',
+    items: [
+      { zh: '阿联酋', en: 'United Arab Emirates' },
+      { zh: '沙特阿拉伯', en: 'Saudi Arabia' },
+      { zh: '卡塔尔', en: 'Qatar' },
+      { zh: '科威特', en: 'Kuwait' },
+      { zh: '以色列', en: 'Israel' },
+      { zh: '约旦', en: 'Jordan' },
+      { zh: '黎巴嫩', en: 'Lebanon' },
+    ],
+  },
+  {
+    zh: '非洲', en: 'Africa',
+    items: [
+      { zh: '南非', en: 'South Africa' },
+      { zh: '埃及', en: 'Egypt' },
+      { zh: '摩洛哥', en: 'Morocco' },
+      { zh: '尼日利亚', en: 'Nigeria' },
+      { zh: '肯尼亚', en: 'Kenya' },
+    ],
+  },
+  {
+    zh: '其他', en: 'Other',
+    items: [
+      { zh: '其他国家/地区', en: 'Other country / region' },
+    ],
+  },
+]
+
+// 拼音/英文名里可能出现引号，属性值必须转义，否则会撑破 <option> 标签
+function attr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+}
+
+// 返回一个可直接塞进 <select> 的 optgroup 结构。selected 用于回填（如后台改单）。
+function countryOptions(lang, selected) {
+  const zh = lang === 'zh'
+  const head = `<option value="">${zh ? '请选择国家/地区' : 'Select country / region'}</option>`
+  const groups = COUNTRY_GROUPS.map(g => {
+    const label = zh ? g.zh : g.en
+    const opts = g.items.map(it => {
+      const val = it.en
+      const text = zh ? it.zh : it.en
+      const sel = selected && selected === val ? ' selected' : ''
+      return `<option value="${attr(val)}"${sel}>${attr(text)}</option>`
+    }).join('')
+    return `<optgroup label="${attr(label)}">${opts}</optgroup>`
+  }).join('')
+  return head + groups
+}
+
+// 已知国家名反查中文名（后台展示用；查不到就原样返回，不报错）
+function countryLabel(value, lang) {
+  if (!value) return ''
+  for (const g of COUNTRY_GROUPS) {
+    for (const it of g.items) {
+      if (it.en === value || it.zh === value) return lang === 'zh' ? it.zh : it.en
+    }
+  }
+  return value
 }
 
 /* ===== chat.js ===== */
@@ -2804,6 +2995,17 @@ async function markOrderPaid(id) {
   return await updateOrderStatusAdmin(id, 'paid')
 }
 
+// 后台补录运费：DDP 到门价由人工核算，下单时 shipping_fee 一定是 0，
+// 这里把运费写回，并把 total 重算成 小计 + 运费（只传运费会让总额和明细打架）。
+async function updateOrderShippingAdmin(id, shippingFee, subtotal) {
+  ensureBackend()
+  const fee = Math.max(0, Number(shippingFee) || 0)
+  const sub = Number(subtotal) || 0
+  return await db.update('orders',
+    { shipping_fee: fee, total: sub + fee, updated_at: new Date().toISOString() },
+    `id=eq.${encodeURIComponent(id)}`)
+}
+
 /* ===== auth.js ===== */
 // SIMDT store — 登录层（Supabase Auth，邮箱 + 密码）
 //
@@ -2942,6 +3144,7 @@ function statusLabel(s) {
 
 /* ===== pages.js ===== */
 // SIMDT store — page renderers
+
 
 
 
@@ -3321,7 +3524,11 @@ async function checkout(ctx) {
         <div class="field"><label>${t('name')}*</label><input id="ck-name"></div>
         <div class="field"><label>${t('email')}*</label><input id="ck-email" value="${esc((ctx.user && ctx.user.email) || '')}"></div>
         <div class="field"><label>${t('phone')}</label><input id="ck-phone"></div>
-        <div class="field"><label>${t('address')}*</label><textarea id="ck-address" rows="3"></textarea></div>
+        <div class="row">
+          <div class="field"><label>${t('country')}*</label><select id="ck-country">${countryOptions(getLang())}</select></div>
+          <div class="field"><label>${t('postal_code')}</label><input id="ck-zip" autocomplete="postal-code"></div>
+        </div>
+        <div class="field"><label>${t('address')}*</label><textarea id="ck-address" rows="3" placeholder="${esc(t('address_ph'))}"></textarea></div>
       </div>
       <div style="flex:1;min-width:300px">
         <h3 style="margin-bottom:10px">${t('order_items')}</h3>
@@ -3330,7 +3537,9 @@ async function checkout(ctx) {
         ${payMethodsHTML()}
         <div class="summary" style="margin-top:14px">
           <div class="line"><span>${t('cart_subtotal')}</span><span>${money(cartSubtotal())}</span></div>
-          <div class="total line"><span>${t('order_total')}</span><span>${money(cartSubtotal())}</span></div>
+          <div class="line"><span>${t('ship_ddp_line')}</span><span class="ship-pending">${t('ship_tbd')}</span></div>
+          <div class="total line"><span>${t('total_excl_ship')}</span><span>${money(cartSubtotal())}</span></div>
+          <div class="ddp-note">${t('ddp_note')}</div>
           <button class="btn btn-primary btn-block" id="ck-place" style="margin-top:14px">${t('place_order')}</button>
         </div>
       </div>
@@ -3347,9 +3556,15 @@ async function checkout(ctx) {
   app.querySelector('#ck-place').addEventListener('click', async () => {
     const name = app.querySelector('#ck-name').value.trim()
     const email = app.querySelector('#ck-email').value.trim()
+    const country = app.querySelector('#ck-country').value
+    const zip = app.querySelector('#ck-zip').value.trim()
     const address = app.querySelector('#ck-address').value.trim()
-    if (!name || !email || !address) { toast(t('fill_required'), 'error'); return }
+    // 国家必填：没有它就只能发邮件反问，运费也没法算（DDP 报价按目的国算）
+    if (!name || !email || !country || !address) { toast(t('fill_required'), 'error'); return }
+    if (!isEmail(email)) { toast(t('err_invalid_email'), 'error'); return }
     const cur = getCurrency()
+    // 地址按国际面单习惯拼：街道 → 邮编 → 国家。后台复制这一行就能填运单。
+    const fullAddress = [address, zip, country].filter(Boolean).join(', ')
     // 演示支付（demo）直接记已支付；接入真实支付渠道后应改为 pending，
     // 再由支付回调或后台手工改 paid，避免"没付钱就算付款"。
     const order = {
@@ -3357,6 +3572,8 @@ async function checkout(ctx) {
       items: items.map(i => ({ product_id: i.id, name: getLang() === 'zh' ? i.name_zh : i.name_en, price: Number(productPrice(i)) || 0, qty: i.qty, image: i.image_url })),
       currency: cur,
       subtotal: cartSubtotal(),
+      // 运费不走前端计算：DDP 到门价由人工按目的国 + 重量核，客户下单后邮件报价。
+      // total 先记商品小计，后台「保存运费」时再补齐（api.updateOrderShippingAdmin）。
       total: cartSubtotal(),
       shipping_fee: 0,
       status: 'pending',
@@ -3364,7 +3581,8 @@ async function checkout(ctx) {
       customer_email: email,
       shipping_name: name,
       shipping_phone: app.querySelector('#ck-phone').value.trim(),
-      shipping_address: address,
+      shipping_address: fullAddress,
+      note: ['Country: ' + country, zip ? 'Postal: ' + zip : ''].filter(Boolean).join('\n'),
     }
     const btn = app.querySelector('#ck-place')
     btn.disabled = true; btn.textContent = t('loading')
@@ -3403,12 +3621,20 @@ async function checkout(ctx) {
 function orderCardHTML(o) {
   const items = (o.items || []).map(it => `<div class="order-item"><img src="${esc(productImage(it.image))}"><div style="flex:1"><div>${esc(it.name)}</div><div class="order-meta">${it.quote ? t('price_on_request') : money(it.price)} × ${Number(it.qty) || 0}</div></div></div>`).join('')
   const quote = o.payment_method === 'quote'
+  // 历史订单必须用「下单时的货币」显示，不能跟随当前界面货币，
+  // 否则客户把语言/货币切成 CNY 后，一笔美元单会显示成 ¥ 数字。
+  const sym = o.currency === 'CNY' ? '¥' : '$'
+  const amt = (v) => sym + Number(v || 0).toFixed(2)
+  const fee = Number(o.shipping_fee || 0)
+  const shipLine = quote ? ''
+    : `<div class="order-meta">${t('cart_subtotal')}: ${amt(o.subtotal)} · ${t('ship_ddp_short')}: ${fee > 0 ? amt(fee) : t('ship_tbd')}</div>`
   return `<div class="order-card" style="flex-direction:column;align-items:stretch">
     <div style="display:flex;justify-content:space-between">
       <b>#${esc(o.order_no || o.id)}</b>
       <span class="status-pill status-${esc(o.status)}">${statusLabel(o.status)}</span>
     </div>
-    <div class="order-meta">${t('order_total')}: ${quote ? t('price_on_request') : money(o.total)} · ${esc(o.currency)} · ${esc(String(o.created_at || '').slice(0, 10))}</div>
+    <div class="order-meta">${t('order_total')}: ${quote ? t('price_on_request') : amt(o.total)} · ${esc(o.currency)} · ${esc(String(o.created_at || '').slice(0, 10))}</div>
+    ${shipLine}
     <div class="order-items">${items}</div>
   </div>`
 }
@@ -3422,7 +3648,12 @@ async function orders(ctx) {
   app.innerHTML = `<h2 class="section-title">${t('orders_title')}</h2><div id="orders-list"><div class="empty">${t('loading')}</div></div>`
   try {
     const list = await listMyOrders()
-    document.getElementById('orders-list').innerHTML = list.length ? list.map(orderCardHTML).join('') : `<div class="empty">${t('orders_empty')}</div>`
+    // 有还没核运费的待处理单时，把 DDP 规则说清楚，否则客户会以为总额就是到手价
+    const waitingShip = list.some(o => o.payment_method !== 'quote'
+      && Number(o.shipping_fee || 0) === 0
+      && ['pending', 'paid'].indexOf(o.status) >= 0)
+    document.getElementById('orders-list').innerHTML = (waitingShip ? `<div class="ddp-note" style="margin:0 0 14px">${t('ddp_note')}</div>` : '')
+      + (list.length ? list.map(orderCardHTML).join('') : `<div class="empty">${t('orders_empty')}</div>`)
   } catch (e) { document.getElementById('orders-list').innerHTML = `<div class="empty">${errText(e)}</div>` }
 }
 
@@ -3733,7 +3964,14 @@ async function renderAdminOrders(body, preloaded) {
   if (!list.length) { body.innerHTML = `<div class="empty">${t('admin_orders_empty')}</div>`; return }
 
   const statusOpts = ['inquiry', 'quoted', 'pending', 'paid', 'shipped', 'completed', 'cancelled', 'failed']
-  const amt = (o) => (o.payment_method === 'quote' ? t('price_on_request') : (o.currency === 'CNY' ? '¥' : '$') + Number(o.total || 0).toFixed(2))
+  const sym = (o) => (o.currency === 'CNY' ? '¥' : '$')
+  const amt = (o) => (o.payment_method === 'quote' ? t('price_on_request') : sym(o) + Number(o.total || 0).toFixed(2))
+  // 金额拆开显示：DDP 报价时运费是后补的，只看总额看不出一单里运费算没算进去
+  const split = (o) => {
+    if (o.payment_method === 'quote') return ''
+    const fee = Number(o.shipping_fee || 0)
+    return `<br><span class="order-meta">${t('cart_subtotal')} ${sym(o)}${Number(o.subtotal || 0).toFixed(2)} + ${t('admin_shipping_fee')} ${fee > 0 ? sym(o) + fee.toFixed(2) : t('ship_tbd')}</span>`
+  }
 
   body.innerHTML = `<table class="table">
     <thead><tr><th>#</th><th>${t('admin_customer')}</th><th>${t('order_items')}</th><th>${t('order_total')}</th><th>${t('order_status')}</th><th></th></tr></thead>
@@ -3741,11 +3979,16 @@ async function renderAdminOrders(body, preloaded) {
       <td>#${esc(o.order_no)}<br><span class="order-meta">${esc(String(o.created_at || '').slice(0, 16).replace('T', ' '))}</span>${o.payment_method === 'quote' ? `<br><span class="status-pill status-inquiry">${t('order_kind_quote')}</span>` : ''}${o.status === 'inquiry' && daysSince(o.created_at) >= 3 ? `<br><span class="status-pill status-late">${t('waiting_days').replace('{n}', daysSince(o.created_at))}</span>` : ''}</td>
       <td>${esc(o.customer_email)}<br><span class="order-meta">${esc([o.shipping_name, o.shipping_phone].filter(Boolean).join(' · '))}</span><br><span class="order-meta">${esc(o.shipping_address)}</span>${o.note ? `<div class="note-box">${esc(o.note).replace(/\n/g, '<br>')}</div>` : ''}</td>
       <td>${(o.items || []).map(it => `${esc(it.name)} &times;${Number(it.qty) || 0}${it.quote ? ' <span class="order-meta">(' + t('price_on_request') + ')</span>' : ''}`).join('<br>')}</td>
-      <td>${amt(o)}</td>
+      <td>${amt(o)}${split(o)}</td>
       <td><span class="status-pill status-${esc(o.status)}">${statusLabel(o.status)}</span></td>
       <td style="white-space:nowrap">
         <select data-status="${esc(o.id)}">${statusOpts.map(s => `<option value="${s}" ${o.status === s ? 'selected' : ''}>${t('status_' + s)}</option>`).join('')}</select>
         <button class="btn" data-update="${esc(o.id)}">${t('admin_order_update')}</button>
+        <div class="ship-edit">
+          <span class="ship-cur">${sym(o)}</span>
+          <input type="number" min="0" step="1" data-ship="${esc(o.id)}" value="${Number(o.shipping_fee || 0) || ''}" placeholder="0" aria-label="${esc(t('admin_shipping_fee'))}">
+          <button class="btn" data-ship-save="${esc(o.id)}">${t('admin_save_ship')}</button>
+        </div>
       </td>
     </tr>`).join('')}</tbody>
   </table>`
@@ -3757,6 +4000,25 @@ async function renderAdminOrders(body, preloaded) {
     try {
       await updateOrderStatusAdmin(id, sel.value)
       toast(t('saved'), 'success')
+      renderAdminOrders(body)
+    } catch (e) { toast(errText(e), 'error'); b.disabled = false }
+  }))
+
+  // 补运费：DDP 到门价是人工按目的国 + 实重核出来的，只能下单后再录。
+  // 保存时同步把 total 重算为 小计 + 运费，避免总额和明细对不上。
+  body.querySelectorAll('[data-ship-save]').forEach(b => b.addEventListener('click', async () => {
+    const id = b.dataset.shipSave
+    const row = list.find(x => String(x.id) === String(id))
+    if (!row) return
+    const input = body.querySelector(`input[data-ship="${id}"]`)
+    const fee = Number(input.value || 0)
+    if (isNaN(fee) || fee < 0) { toast(t('err_invalid_amount'), 'error'); return }
+    b.disabled = true
+    try {
+      await updateOrderShippingAdmin(id, fee, row.subtotal)
+      const total = Number(row.subtotal || 0) + fee
+      const s = row.currency === 'CNY' ? '¥' : '$'
+      toast(t('admin_ship_saved').replace('{n}', s + total.toFixed(2)), 'success')
       renderAdminOrders(body)
     } catch (e) { toast(errText(e), 'error'); b.disabled = false }
   }))
