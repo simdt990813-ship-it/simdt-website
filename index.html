@@ -287,7 +287,8 @@
   /* ---- WHERE TO BUY ---- */
   .buy-section { background: var(--bg-card); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
   .buy-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;
+    max-width: 860px; margin: 0 auto;
   }
   .buy-card {
     background: var(--bg); border: 1px solid var(--border);
@@ -297,6 +298,7 @@
   }
   .buy-card:hover { border-color: var(--accent); transform: translateY(-2px); }
   .buy-icon { font-size: 40px; margin-bottom: 16px; }
+  .buy-icon svg { display: inline-block; vertical-align: middle; }
   .buy-card h4 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
   .buy-card p { font-size: 14px; color: var(--text-muted); }
   .buy-arrow {
@@ -597,12 +599,26 @@
     <div class="section-label fade-in" data-i18n="buy_label">Official Store</div>
     <h2 class="section-title fade-in" data-i18n="buy_title">Shop the Official SIMDT Store</h2>
     <p class="section-desc fade-in" data-i18n="buy_desc">Order directly from SIMDT — genuine products, worldwide shipping.</p>
-    <div class="buy-grid fade-in" style="grid-template-columns:1fr;max-width:520px">
+    <div class="buy-grid fade-in">
       <a href="store/index.html" class="buy-card">
         <div class="buy-icon">&#x1F6D2;</div>
         <h4 data-i18n="buy_store_name">SIMDT Official Store</h4>
         <p data-i18n="buy_store_desc">Browse the full lineup and order online</p>
         <span class="buy-arrow" data-i18n="buy_store_go">Enter Store &rarr;</span>
+      </a>
+      <a href="https://simdt.taobao.com" class="buy-card" target="_blank" rel="noopener noreferrer">
+        <div class="buy-icon">
+          <svg width="40" height="40" viewBox="8 5 24 30" fill="none" aria-hidden="true">
+            <path d="M9.5 13.5h21l-1.9 17.4a2 2 0 0 1-2 1.9H13.4a2 2 0 0 1-2-1.9L9.5 13.5Z" stroke="#FF5000" stroke-width="2.4" stroke-linejoin="round"/>
+            <path d="M15.6 13.5v-2.6a4.4 4.4 0 0 1 8.8 0v2.6" stroke="#FF5000" stroke-width="2.4" stroke-linecap="round"/>
+            <circle cx="16.3" cy="21.4" r="1.5" fill="#FF5000"/>
+            <circle cx="23.7" cy="21.4" r="1.5" fill="#FF5000"/>
+            <path d="M16.3 26.3c1.3 1.7 6.1 1.7 7.4 0" stroke="#FF5000" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h4 data-i18n="buy_taobao_name">SIMDT 淘宝店</h4>
+        <p data-i18n="buy_taobao_desc">中国大陆发货，支持支付宝</p>
+        <span class="buy-arrow" data-i18n="buy_taobao_go">进入淘宝店 &rarr;</span>
       </a>
     </div>
   </div>
@@ -798,6 +814,9 @@ const i18n = {
     buy_store_name: 'SIMDT Official Store',
     buy_store_desc: 'Browse the full lineup and order online',
     buy_store_go: 'Enter Store →',
+    buy_taobao_name: 'SIMDT on Taobao',
+    buy_taobao_desc: 'Ships within mainland China · Alipay accepted',
+    buy_taobao_go: 'Visit Taobao Store →',
 
     footer: 'SIMDT（夺途）Racing Simulation Hardware. www.simdt.cn',
     footer_company: 'Zhongshan Qiyu Technology Co., Ltd.',
@@ -959,6 +978,9 @@ const i18n = {
     buy_store_name: 'SIMDT 官方商店',
     buy_store_desc: '浏览全线产品，在线下单',
     buy_store_go: '进入商店 →',
+    buy_taobao_name: 'SIMDT 淘宝店',
+    buy_taobao_desc: '中国大陆发货 · 支持支付宝',
+    buy_taobao_go: '进入淘宝店 →',
 
     footer: 'SIMDT（夺途）赛车模拟硬件 www.simdt.cn',
     footer_company: '中山市旗鱼科技有限公司',
